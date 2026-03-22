@@ -35,7 +35,7 @@ textarea { font-family:inherit; background:transparent; color:#807c70; border:no
 #stats-bar { padding:6px 8px; border-top:1px solid var(--border); font-size:9px; color:var(--dim); line-height:2; }
 
 #canvas-area { display:flex; justify-content:center; align-items:center; background:#d8d4cc; position:relative; overflow:hidden; }
-#canvas-wrap { background:#222018; padding:10px; box-shadow:0 4px 40px rgba(0,0,0,.6); position:relative; }
+#canvas-wrap { background:transparent; padding:0; position:relative; }
 #canvas-label { position:absolute; top:2px; left:50%; transform:translateX(-50%); font-size:7px; letter-spacing:3px; color:var(--dim2); }
 #epd { image-rendering:pixelated; display:block; }
 #hover-info { position:absolute; bottom:8px; left:8px; font-size:9px; color:var(--dim); letter-spacing:1px; }
@@ -112,7 +112,6 @@ textarea { font-family:inherit; background:transparent; color:#807c70; border:no
 
   <div id="canvas-area">
     <div id="canvas-wrap">
-      <div id="canvas-label">GNOSIS EPD-400</div>
       <canvas id="epd" width="800" height="600"></canvas>
     </div>
     <div id="hover-info"></div>
