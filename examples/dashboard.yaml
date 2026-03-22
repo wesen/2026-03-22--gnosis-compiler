@@ -1,0 +1,79 @@
+type: screen
+width: 400
+height: 280
+bar:
+  type: hbox
+  h: 16
+  border_b: true
+  children:
+    - type: label
+      text: "{{title}}"
+    - type: spacer
+    - type: label
+      text: "{{status}}"
+      color: ghost
+body:
+  type: hbox
+  split: 188
+  children:
+    - type: fixed
+      children:
+        - type: label
+          x: 8
+          y: 8
+          text: ROLL
+          color: ghost
+        - type: label
+          x: 8
+          y: 24
+          bind: sensor.roll
+          field_w: 3
+          size: 2
+          waveform: part
+        - type: bar
+          x: 8
+          y: 56
+          w: 168
+          h: 4
+          bind: sensor.roll
+          max: 360
+          waveform: part
+        - type: sep
+          x: 8
+          y: 76
+          w: 168
+        - type: label
+          x: 8
+          y: 88
+          text: TEMP
+          color: ghost
+        - type: label
+          x: 8
+          y: 104
+          bind: sensor.temp
+          field_w: 4
+          size: 2
+          waveform: fast
+    - type: vbox
+      children:
+        - type: label
+          h: 16
+          text: TASKS
+          color: ghost
+        - type: list
+          data: { $prop: tasks }
+          row_h: 16
+          max_items: 6
+          selected: 1
+nav:
+  type: hbox
+  h: 16
+  border_t: true
+  children:
+    - type: label
+      text: A:OK
+      color: mid
+    - type: spacer
+    - type: label
+      text: "{{footer}}"
+      color: mid

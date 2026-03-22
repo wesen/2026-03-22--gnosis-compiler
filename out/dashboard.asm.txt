@@ -1,0 +1,22 @@
+0000: HLINE       x=0 y=15 w=400 color=mid
+0008: TEXT        x=0 y=0 size=1 color=fg max=11 string[0]='GNOSIS//NAV'
+0012: TEXT        x=368 y=0 size=1 color=ghost max=4 string[1]='LINK'
+001c: VLINE       x=188 y=16 h=248 color=mid
+0024: TEXT        x=8 y=24 size=1 color=ghost max=4 string[2]='ROLL'
+002e: BIND_TEXT   x=8 y=40 size=2 color=fg max=3 bind[0]='sensor.roll'
+0037: BIND_BAR    x=8 y=72 w=168 h=4 bind[0]='sensor.roll' max=360 track=light fill=fg
+0045: HLINE       x=8 y=92 w=168 color=mid
+004d: TEXT        x=8 y=104 size=1 color=ghost max=4 string[3]='TEMP'
+0057: BIND_TEXT   x=8 y=120 size=2 color=fg max=4 bind[1]='sensor.temp'
+0060: TEXT        x=189 y=16 size=1 color=ghost max=26 string[4]='TASKS'
+006a: TEXT        x=191 y=34 size=1 color=fg max=25 string[5]='Calibrate IMU'
+0074: FILL_RECT   x=189 y=48 w=211 h=16 color=light
+007e: TEXT        x=191 y=50 size=1 color=fg max=25 string[6]='Sync clock'
+0088: TEXT        x=191 y=66 size=1 color=fg max=25 string[7]='Check bus voltage'
+0092: TEXT        x=191 y=82 size=1 color=fg max=25 string[8]='Log refresh stats'
+009c: TEXT        x=191 y=98 size=1 color=fg max=25 string[9]='Prune old samples'
+00a6: TEXT        x=191 y=114 size=1 color=fg max=25 string[10]='Sleep scheduler'
+00b0: HLINE       x=0 y=264 w=400 color=mid
+00b8: TEXT        x=0 y=264 size=1 color=mid max=4 string[11]='A:OK'
+00c2: TEXT        x=360 y=264 size=1 color=mid max=5 string[12]='READY'
+00cc: HALT

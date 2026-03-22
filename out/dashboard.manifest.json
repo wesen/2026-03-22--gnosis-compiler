@@ -1,0 +1,146 @@
+{
+  "width": 400,
+  "height": 280,
+  "code_size": 205,
+  "string_count": 13,
+  "bind_count": 2,
+  "region_count": 3,
+  "strings": [
+    "GNOSIS//NAV",
+    "LINK",
+    "ROLL",
+    "TEMP",
+    "TASKS",
+    "Calibrate IMU",
+    "Sync clock",
+    "Check bus voltage",
+    "Log refresh stats",
+    "Prune old samples",
+    "Sleep scheduler",
+    "A:OK",
+    "READY"
+  ],
+  "binds": [
+    "sensor.roll",
+    "sensor.temp"
+  ],
+  "bind_sites": [
+    {
+      "bind_id": 0,
+      "bind_name": "sensor.roll",
+      "rect": {
+        "x": 8,
+        "y": 40,
+        "w": 48,
+        "h": 16
+      },
+      "waveform": "part",
+      "node_id": "n4",
+      "opcode_offset": 46
+    },
+    {
+      "bind_id": 0,
+      "bind_name": "sensor.roll",
+      "rect": {
+        "x": 8,
+        "y": 72,
+        "w": 168,
+        "h": 4
+      },
+      "waveform": "part",
+      "node_id": "n5",
+      "opcode_offset": 55
+    },
+    {
+      "bind_id": 1,
+      "bind_name": "sensor.temp",
+      "rect": {
+        "x": 8,
+        "y": 120,
+        "w": 64,
+        "h": 16
+      },
+      "waveform": "fast",
+      "node_id": "n8",
+      "opcode_offset": 87
+    }
+  ],
+  "regions": [
+    {
+      "rect": {
+        "x": 8,
+        "y": 40,
+        "w": 48,
+        "h": 16
+      },
+      "waveform": "part",
+      "bind_ids": [
+        0
+      ],
+      "bind_names": [
+        "sensor.roll"
+      ]
+    },
+    {
+      "rect": {
+        "x": 8,
+        "y": 72,
+        "w": 168,
+        "h": 4
+      },
+      "waveform": "part",
+      "bind_ids": [
+        0
+      ],
+      "bind_names": [
+        "sensor.roll"
+      ]
+    },
+    {
+      "rect": {
+        "x": 8,
+        "y": 120,
+        "w": 64,
+        "h": 16
+      },
+      "waveform": "fast",
+      "bind_ids": [
+        1
+      ],
+      "bind_names": [
+        "sensor.temp"
+      ]
+    }
+  ],
+  "stats": {
+    "passes": [
+      {
+        "name": "dead_node_elimination",
+        "before": 19,
+        "after": 19
+      },
+      {
+        "name": "flatten_boxes",
+        "before": 19,
+        "after": 19
+      },
+      {
+        "name": "flatten_boxes_fixed_point",
+        "before": 19,
+        "after": 19
+      }
+    ],
+    "input_nodes": 19,
+    "final_nodes": 19,
+    "dynamic_nodes": 5,
+    "static_nodes": 14,
+    "bind_count": 2,
+    "string_count": 13,
+    "code_size": 205,
+    "region_count": 3,
+    "screen": {
+      "width": 400,
+      "height": 280
+    }
+  }
+}

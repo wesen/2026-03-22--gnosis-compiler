@@ -1,0 +1,10 @@
+title: GNOSIS//NAV
+status: LINK
+footer: READY
+tasks:
+  - Calibrate IMU
+  - Sync clock
+  - Check bus voltage
+  - Log refresh stats
+  - Prune old samples
+  - Sleep scheduler
