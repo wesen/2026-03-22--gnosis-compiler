@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GNOSIS // COMPILER WORKBENCH</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --bg: #0c0b0a; --bg2: #161513; --bg3: #1a1916;
+  --border: #2e2c28; --fg: #b0aa9e; --dim: #5a5850;
+  --dim2: #3a3830; --accent: #8a8670; --green: #6a8a50;
+  --red: #d04040; --redbg: #2a1010; --orange: #c0a080;
+}
+body { background:var(--bg); color:var(--fg); font-family:'Share Tech Mono','Courier New',monospace; font-size:12px; overflow:hidden; height:100vh; }
+button { font-family:inherit; cursor:pointer; border:none; background:none; color:var(--dim); font-size:10px; letter-spacing:1px; padding:6px 12px; }
+button:hover { color:var(--fg); }
+button.active { color:var(--fg); border-bottom:2px solid var(--accent); background:var(--bg3); }
+select { font-family:inherit; background:var(--bg2); color:var(--fg); border:1px solid var(--border); padding:4px 8px; font-size:11px; outline:none; }
+textarea { font-family:inherit; background:transparent; color:#807c70; border:none; outline:none; resize:none; font-size:11px; line-height:1.6; tab-size:2; width:100%; }
+
+/* Layout */
+#app { display:grid; grid-template-columns:380px 1fr; grid-template-rows:auto 1fr auto 260px; height:100vh; }
+#header { grid-column:1/-1; padding:6px 12px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:16px; background:var(--bg2); }
+#header h1 { font-size:10px; letter-spacing:3px; color:var(--dim); font-weight:normal; }
+
+#left { grid-row:2/5; border-right:1px solid var(--border); display:flex; flex-direction:column; background:var(--bg2); }
+#editor-tabs { display:flex; border-bottom:1px solid var(--border); }
+#source-wrap { flex:1; overflow:hidden; position:relative; }
+#source-wrap textarea { height:100%; padding:8px; }
+#error-bar { position:absolute; bottom:0; left:0; right:0; background:var(--redbg); color:var(--red); padding:4px 8px; font-size:9px; border-top:1px solid #401515; display:none; }
+#stats-bar { padding:6px 8px; border-top:1px solid var(--border); font-size:9px; color:var(--dim); line-height:2; }
+
+#canvas-area { display:flex; justify-content:center; align-items:center; background:var(--bg); position:relative; overflow:hidden; }
+#canvas-wrap { background:#222018; padding:10px; box-shadow:0 4px 40px rgba(0,0,0,.6); position:relative; }
+#canvas-label { position:absolute; top:2px; left:50%; transform:translateX(-50%); font-size:7px; letter-spacing:3px; color:var(--dim2); }
+#epd { image-rendering:pixelated; display:block; }
+#hover-info { position:absolute; bottom:8px; left:8px; font-size:9px; color:var(--dim); letter-spacing:1px; }
+#overlay-bar { position:absolute; top:8px; right:8px; display:flex; gap:4px; }
+.ovl-btn { padding:3px 8px; font-size:9px; border:1px solid var(--border); border-radius:2px; }
+.ovl-btn.on { background:var(--bg3); color:var(--fg); border-color:var(--accent); }
+
+#bottom-tabs { display:flex; border-top:1px solid var(--border); border-bottom:1px solid var(--border); background:#111010; }
+#inspector { overflow:auto; background:var(--bg); font-size:10px; line-height:1.8; padding:0; }
+#inspector pre { padding:8px; white-space:pre-wrap; word-break:break-all; }
+
+/* AST tree */
+.ast-node { padding:1px 0; }
+.ast-node .toggle { cursor:pointer; user-select:none; color:var(--dim); }
+.ast-type { color:var(--accent); font-weight:bold; margin-right:6px; }
+.ast-prop { color:var(--dim); margin-right:4px; }
+.ast-bind { color:var(--orange); }
+.ast-static { color:var(--green); }
+.ast-rect { color:var(--dim2); }
+.ast-children { padding-left:16px; }
+
+/* Disasm */
+.dasm-line { display:flex; gap:0; padding:0 8px; cursor:pointer; }
+.dasm-line:hover { background:rgba(255,255,255,.03); }
+.dasm-line.hl { background:var(--redbg); border-left:2px solid var(--red); }
+.dasm-off { width:48px; color:var(--dim2); flex-shrink:0; }
+.dasm-op { width:100px; color:var(--accent); flex-shrink:0; }
+.dasm-args { flex:1; color:var(--dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+/* Hex */
+.hex-row { display:flex; gap:0; padding:0 8px; }
+.hex-off { width:48px; color:var(--dim2); flex-shrink:0; }
+.hex-bytes { display:flex; gap:4px; flex:1; }
+.hex-byte { color:var(--dim); }
+.hex-byte.hl { color:var(--red); background:var(--redbg); }
+.hex-ascii { width:130px; color:var(--dim2); margin-left:8px; letter-spacing:1px; }
+
+/* Stats */
+.stats-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(200px,1fr)); gap:12px; padding:12px; }
+.stat-card { border:1px solid var(--border); padding:8px; }
+.stat-card h3 { font-size:9px; letter-spacing:2px; color:var(--dim); margin-bottom:4px; font-weight:normal; }
+.stat-card .val { color:var(--fg); }
+
+/* Regions */
+.region-item { padding:4px 8px; border-bottom:1px solid var(--border); }
+.region-item:hover { background:rgba(255,255,255,.02); }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="header">
+    <h1>GNOSIS // COMPILER WORKBENCH</h1>
+    <select id="preset-select"><option value="">-- select preset --</option></select>
+    <button id="btn-compile" onclick="doCompile()">COMPILE</button>
+    <label style="font-size:9px;color:var(--dim);display:flex;align-items:center;gap:4px">
+      <input type="checkbox" id="auto-compile" checked> AUTO
+    </label>
+    <div style="flex:1"></div>
+    <span id="compile-status" style="font-size:9px;color:var(--dim2)"></span>
+  </div>
+
+  <div id="left">
+    <div id="editor-tabs">
+      <button class="active" onclick="showEditorTab('source',this)">SOURCE</button>
+      <button onclick="showEditorTab('props',this)">PROPS</button>
+    </div>
+    <div id="source-wrap">
+      <textarea id="source-editor" spellcheck="false" placeholder="type: screen&#10;width: 400&#10;..."></textarea>
+      <textarea id="props-editor" spellcheck="false" placeholder="title: Hello&#10;..." style="display:none;height:100%;padding:8px"></textarea>
+      <div id="error-bar"></div>
+    </div>
+    <div id="stats-bar">Ready</div>
+  </div>
+
+  <div id="canvas-area">
+    <div id="canvas-wrap">
+      <div id="canvas-label">GNOSIS EPD-400</div>
+      <canvas id="epd" width="800" height="600"></canvas>
+    </div>
+    <div id="hover-info"></div>
+    <div id="overlay-bar">
+      <button class="ovl-btn" data-overlay="bounds" onclick="toggleOverlay(this)">BOUNDS</button>
+      <button class="ovl-btn" data-overlay="dirty" onclick="toggleOverlay(this)">DIRTY</button>
+      <button class="ovl-btn" data-overlay="depth" onclick="toggleOverlay(this)">DEPTH</button>
+    </div>
+  </div>
+
+  <div id="bottom-tabs">
+    <button class="active" onclick="showTab('disasm',this)">DISASSEMBLY</button>
+    <button onclick="showTab('ast',this)">AST</button>
+    <button onclick="showTab('hex',this)">HEX</button>
+    <button onclick="showTab('stats',this)">STATS</button>
+    <button onclick="showTab('manifest',this)">MANIFEST</button>
+    <button onclick="showTab('regions',this)">REGIONS</button>
+    <button onclick="showTab('bindsim',this)">BIND SIM</button>
+    <div style="flex:1"></div>
+    <span id="tab-info" style="padding:6px 12px;font-size:9px;color:var(--dim2)"></span>
+  </div>
+
+  <div id="inspector">
+    <div id="panel-disasm"></div>
+    <div id="panel-ast" style="display:none"></div>
+    <div id="panel-hex" style="display:none"></div>
+    <div id="panel-stats" style="display:none"></div>
+    <div id="panel-manifest" style="display:none"></div>
+    <div id="panel-regions" style="display:none"></div>
+    <div id="panel-bindsim" style="display:none"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  GNOSIS COMPILER WORKBENCH — Frontend
+// ═══════════════════════════════════════════════════════════
+
+const PALETTE = {0:"#d8d4cc",1:"#2a2a28",2:"#9e9a92",3:"#c4c0b8",4:"#b8b4ac"};
+const COLOR_NAMES = {0:"bg",1:"fg",2:"mid",3:"light",4:"ghost"};
+const GLYPH_W = 8;
+
+// ── Bitmap font (5x7, from gnosis-compiler.jsx) ──
+const BM={A:[14,17,17,31,17,17,17],B:[30,17,17,30,17,17,30],C:[14,17,16,16,16,17,14],D:[30,17,17,17,17,17,30],E:[31,16,16,30,16,16,31],F:[31,16,16,30,16,16,16],G:[14,17,16,23,17,17,14],H:[17,17,17,31,17,17,17],I:[14,4,4,4,4,4,14],J:[7,2,2,2,2,18,12],K:[17,18,20,24,20,18,17],L:[16,16,16,16,16,16,31],M:[17,27,21,21,17,17,17],N:[17,17,25,21,19,17,17],O:[14,17,17,17,17,17,14],P:[30,17,17,30,16,16,16],Q:[14,17,17,17,21,18,13],R:[30,17,17,30,20,18,17],S:[14,17,16,14,1,17,14],T:[31,4,4,4,4,4,4],U:[17,17,17,17,17,17,14],V:[17,17,17,17,17,10,4],W:[17,17,17,21,21,27,17],X:[17,17,10,4,10,17,17],Y:[17,17,10,4,4,4,4],Z:[31,1,2,4,8,16,31]," ":[0,0,0,0,0,0,0],"0":[14,17,19,21,25,17,14],"1":[4,12,4,4,4,4,14],"2":[14,17,1,2,4,8,31],"3":[14,17,1,6,1,17,14],"4":[2,6,10,18,31,2,2],"5":[31,16,30,1,1,17,14],"6":[14,17,16,30,17,17,14],"7":[31,1,2,4,8,8,8],"8":[14,17,17,14,17,17,14],"9":[14,17,17,15,1,17,14],":":[0,4,4,0,4,4,0],".":[0,0,0,0,0,12,12],"-":[0,0,0,31,0,0,0],"/":[1,2,2,4,8,8,16],"%":[25,25,2,4,8,19,19],"(":[2,4,8,8,8,4,2],")":[8,4,2,2,2,4,8],">":[8,4,2,1,2,4,8],"+":[0,4,4,31,4,4,0],"#":[10,10,31,10,31,10,10],"_":[0,0,0,0,0,0,31],"=":[0,0,31,0,31,0,0],"!":[4,4,4,4,4,0,4],",":[0,0,0,0,0,4,8],"'":[4,4,8,0,0,0,0],"[":[14,8,8,8,8,8,14],"]":[14,2,2,2,2,2,14],"<":[1,2,4,8,4,2,1],"@":[14,17,23,21,23,16,14],";":[0,4,4,0,4,4,8],"*":[0,10,4,31,4,10,0]};
+"abcdefghijklmnopqrstuvwxyz".split("").forEach((c,i)=>{BM[c]=BM[String.fromCharCode(65+i)]});
+
+// ── State ──
+let compileResult = null;
+let highlightPc = -1;
+let overlays = {bounds:false,dirty:false,depth:false};
+let bindValues = {};
+let currentTab = 'disasm';
+let currentEditorTab = 'source';
+let astStage = 'laid_out';
+
+// ── Compile ──
+let compileTimer = null;
+function scheduleCompile() {
+  if (!document.getElementById('auto-compile').checked) return;
+  clearTimeout(compileTimer);
+  compileTimer = setTimeout(doCompile, 400);
+}
+
+async function doCompile() {
+  const source = document.getElementById('source-editor').value;
+  const props = document.getElementById('props-editor').value;
+  const status = document.getElementById('compile-status');
+  const errBar = document.getElementById('error-bar');
+  status.textContent = 'COMPILING...';
+  try {
+    const resp = await fetch('/api/compile', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({source, props})
+    });
+    const data = await resp.json();
+    if (!data.success) {
+      errBar.textContent = 'ERR: ' + data.error;
+      errBar.style.display = 'block';
+      status.textContent = 'ERROR';
+      return;
+    }
+    errBar.style.display = 'none';
+    compileResult = data;
+    // Init bind values for any new binds
+    (data.program.binds||[]).forEach(b => { if (!(b in bindValues)) bindValues[b] = ''; });
+    status.textContent = data.program.code_size + 'B / ' + (data.disassembly.split('\n').length) + ' OPS';
+    updateStats();
+    renderCanvas();
+    updatePanels();
+  } catch(e) {
+    errBar.textContent = 'ERR: ' + e.message;
+    errBar.style.display = 'block';
+    status.textContent = 'ERROR';
+  }
+}
+
+// ── Canvas rendering ──
+function renderCanvas() {
+  if (!compileResult) return;
+  const canvas = document.getElementById('epd');
+  const ctx = canvas.getContext('2d');
+  const W = compileResult.program.stats.screen.width;
+  const H = compileResult.program.stats.screen.height;
+  const scale = 2;
+  canvas.width = W*scale; canvas.height = H*scale;
+  canvas.style.width = W*scale+'px'; canvas.style.height = H*scale+'px';
+  ctx.save(); ctx.scale(scale,scale);
+
+  // e-ink bg
+  ctx.fillStyle = PALETTE[0];
+  ctx.fillRect(0,0,W,H);
+
+  // grain
+  const img = ctx.getImageData(0,0,W*scale,H*scale);
+  for(let i=0;i<img.data.length;i+=16){const n=(Math.random()-.5)*6;img.data[i]+=n;img.data[i+1]+=n;img.data[i+2]+=n;}
+  ctx.putImageData(img,0,0);
+  ctx.scale(1/scale,1/scale); ctx.scale(scale,scale); // reset after getImageData
+
+  // Execute bytecode
+  const bytes = base64ToBytes(compileResult.bytecode_base64);
+  const strings = compileResult.program.strings || [];
+  const binds = compileResult.program.binds || [];
+  executeBytecode(ctx, bytes, strings, binds);
+
+  // Overlays
+  if (overlays.bounds && compileResult.stages.laid_out) {
+    drawBoundsOverlay(ctx, compileResult.stages.laid_out, 0);
+  }
+  if (overlays.dirty && compileResult.program.regions) {
+    drawDirtyOverlay(ctx, compileResult.program.regions);
+  }
+  if (overlays.depth && compileResult.stages.laid_out) {
+    drawDepthOverlay(ctx, compileResult.stages.laid_out, 0);
+  }
+
+  ctx.restore();
+}
+
+function base64ToBytes(b64) {
+  const bin = atob(b64);
+  const arr = new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);
+  return arr;
+}
+
+function readU16LE(b,o){return b[o]|(b[o+1]<<8);}
+
+function blitChar(ctx,ch,x,y,size,col){
+  const bm=BM[ch]||BM[" "]||[0,0,0,0,0,0,0];
+  ctx.fillStyle=PALETTE[col]||PALETTE[1];
+  for(let r=0;r<7;r++)for(let c=0;c<5;c++)if(bm[r]&(1<<(4-c)))ctx.fillRect(x+c*size,y+r*size,size,size);
+}
+function blitText(ctx,x,y,text,size,col,max){
+  const t=(text||'').slice(0,max||999);
+  for(let i=0;i<t.length;i++)blitChar(ctx,t[i],x+i*GLYPH_W*size,y,size,col);
+}
+
+function executeBytecode(ctx, bytes, strings, binds) {
+  let pc = 0;
+  while (pc < bytes.length) {
+    const op = bytes[pc]; pc++;
+    if (op === 0xFF) break; // HALT
+    if (op === 0x00) continue; // NOP
+
+    if (op === 0x01) { // HLINE
+      const x=readU16LE(bytes,pc);pc+=2; const y=readU16LE(bytes,pc);pc+=2;
+      const w=readU16LE(bytes,pc);pc+=2; const col=bytes[pc];pc++;
+      ctx.fillStyle=PALETTE[col]; ctx.fillRect(x,y,w,1);
+    } else if (op === 0x02) { // VLINE
+      const x=readU16LE(bytes,pc);pc+=2; const y=readU16LE(bytes,pc);pc+=2;
+      const h=readU16LE(bytes,pc);pc+=2; const col=bytes[pc];pc++;
+      ctx.fillStyle=PALETTE[col]; ctx.fillRect(x,y,1,h);
+    } else if (op === 0x03) { // FILL_RECT
+      const x=readU16LE(bytes,pc);pc+=2; const y=readU16LE(bytes,pc);pc+=2;
+      const w=readU16LE(bytes,pc);pc+=2; const h=readU16LE(bytes,pc);pc+=2;
+      const col=bytes[pc];pc++;
+      ctx.fillStyle=PALETTE[col]; ctx.fillRect(x,y,w,h);
+    } else if (op === 0x04) { // STROKE_RECT
+      const x=readU16LE(bytes,pc);pc+=2; const y=readU16LE(bytes,pc);pc+=2;
+      const w=readU16LE(bytes,pc);pc+=2; const h=readU16LE(bytes,pc);pc+=2;
+      const col=bytes[pc];pc++;
+      ctx.strokeStyle=PALETTE[col]; ctx.lineWidth=1;
+      ctx.strokeRect(x+.5,y+.5,w-1,h-1);
+    } else if (op === 0x10) { // TEXT
+      const x=readU16LE(bytes,pc);pc+=2; const y=readU16LE(bytes,pc);pc+=2;
+      const size=bytes[pc];pc++; const col=bytes[pc];pc++;
+      const max=bytes[pc];pc++; const sid=readU16LE(bytes,pc);pc+=2;
+      blitText(ctx,x,y,strings[sid]||'',size,col,max);
+    } else if (op === 0x11) { // BIND_TEXT
+      const x=readU16LE(bytes,pc);pc+=2; const y=readU16LE(bytes,pc);pc+=2;
+      const size=bytes[pc];pc++; const col=bytes[pc];pc++;
+      const max=bytes[pc];pc++; const bid=bytes[pc];pc++;
+      const bname = binds[bid]||'';
+      const text = bindValues[bname] || bname.split('.').pop() || '---';
+      blitText(ctx,x,y,text,size,col,max);
+    } else if (op === 0x12) { // BAR
+      const x=readU16LE(bytes,pc);pc+=2; const y=readU16LE(bytes,pc);pc+=2;
+      const w=readU16LE(bytes,pc);pc+=2; const h=readU16LE(bytes,pc);pc+=2;
+      const val=readU16LE(bytes,pc);pc+=2; const mx=readU16LE(bytes,pc);pc+=2;
+      const track=bytes[pc];pc++; const fill=bytes[pc];pc++;
+      ctx.fillStyle=PALETTE[track]; ctx.fillRect(x,y,w,h);
+      const fw=Math.floor(w*Math.min(val,mx)/Math.max(mx,1));
+      ctx.fillStyle=PALETTE[fill]; ctx.fillRect(x,y,fw,h);
+    } else if (op === 0x13) { // BIND_BAR
+      const x=readU16LE(bytes,pc);pc+=2; const y=readU16LE(bytes,pc);pc+=2;
+      const w=readU16LE(bytes,pc);pc+=2; const h=readU16LE(bytes,pc);pc+=2;
+      const bid=bytes[pc];pc++; const mx=readU16LE(bytes,pc);pc+=2;
+      const track=bytes[pc];pc++; const fill=bytes[pc];pc++;
+      ctx.fillStyle=PALETTE[track]; ctx.fillRect(x,y,w,h);
+      const bname=binds[bid]||'';
+      const val=parseInt(bindValues[bname])||Math.floor(mx/2);
+      const fw=Math.floor(w*Math.min(val,mx)/Math.max(mx,1));
+      ctx.fillStyle=PALETTE[fill]; ctx.fillRect(x,y,fw,h);
+    } else if (op === 0x14) { // CIRCLE
+      const cx=readU16LE(bytes,pc);pc+=2; const cy=readU16LE(bytes,pc);pc+=2;
+      const r=readU16LE(bytes,pc);pc+=2; const col=bytes[pc];pc++;
+      ctx.strokeStyle=PALETTE[col]; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke();
+    } else if (op === 0x15) { // CROSS
+      const cx=readU16LE(bytes,pc);pc+=2; const cy=readU16LE(bytes,pc);pc+=2;
+      const len=readU16LE(bytes,pc);pc+=2; const col=bytes[pc];pc++;
+      ctx.strokeStyle=PALETTE[col]; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(cx-len,cy); ctx.lineTo(cx+len,cy);
+      ctx.moveTo(cx,cy-len); ctx.lineTo(cx,cy+len); ctx.stroke();
+    } else {
+      break; // unknown opcode
+    }
+  }
+}
+
+// ── Overlays ──
+function drawBoundsOverlay(ctx, node, depth) {
+  if (!node) return;
+  const r = node.rect;
+  if (r) {
+    const hue = (depth * 40) % 360;
+    ctx.strokeStyle = `hsla(${hue},70%,55%,0.6)`;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(r.x+.5, r.y+.5, r.w-1, r.h-1);
+  }
+  for (const section of ['bar','body','nav']) {
+    if (node[section]) drawBoundsOverlay(ctx, node[section], depth+1);
+  }
+  (node.children||[]).forEach(c => drawBoundsOverlay(ctx, c, depth+1));
+}
+
+function drawDirtyOverlay(ctx, regions) {
+  const colors = {fast:'rgba(100,200,100,0.3)',part:'rgba(200,200,50,0.3)',full:'rgba(200,80,80,0.3)'};
+  regions.forEach(reg => {
+    const r = reg.rect;
+    ctx.fillStyle = colors[reg.waveform] || colors.fast;
+    ctx.fillRect(r.x, r.y, r.w, r.h);
+    ctx.strokeStyle = colors[reg.waveform]?.replace('0.3','0.8') || '#8f8';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(r.x+.5, r.y+.5, r.w-1, r.h-1);
+    ctx.fillStyle = '#fff';
+    ctx.font = '8px monospace';
+    ctx.fillText(reg.waveform + ' [' + reg.bind_names.join(',') + ']', r.x+2, r.y-2);
+  });
+}
+
+function drawDepthOverlay(ctx, node, depth) {
+  if (!node) return;
+  const r = node.rect;
+  if (r && r.w > 0 && r.h > 0) {
+    const alpha = Math.min(0.15, 0.03 * depth);
+    const hue = (depth * 40) % 360;
+    ctx.fillStyle = `hsla(${hue},60%,50%,${alpha})`;
+    ctx.fillRect(r.x, r.y, r.w, r.h);
+  }
+  for (const section of ['bar','body','nav']) {
+    if (node[section]) drawDepthOverlay(ctx, node[section], depth+1);
+  }
+  (node.children||[]).forEach(c => drawDepthOverlay(ctx, c, depth+1));
+}
+
+function toggleOverlay(btn) {
+  const key = btn.dataset.overlay;
+  overlays[key] = !overlays[key];
+  btn.classList.toggle('on', overlays[key]);
+  renderCanvas();
+}
+
+// ── Panels ──
+function updatePanels() {
+  if (!compileResult) return;
+  updateDisasm();
+  updateAST();
+  updateHex();
+  updateManifest();
+  updateRegions();
+  updateBindSim();
+}
+
+function updateDisasm() {
+  const lines = (compileResult.disassembly||'').split('\n');
+  const el = document.getElementById('panel-disasm');
+  el.innerHTML = lines.map(line => {
+    const m = line.match(/^([0-9a-f]+):\s+(\S+)\s*(.*)/i);
+    if (!m) return '';
+    return `<div class="dasm-line"><span class="dasm-off">${m[1]}</span><span class="dasm-op">${m[2]}</span><span class="dasm-args">${m[3]}</span></div>`;
+  }).join('');
+}
+
+function updateAST() {
+  const el = document.getElementById('panel-ast');
+  const stages = compileResult.stages || {};
+  const stageKeys = Object.keys(stages).sort();
+  let html = '<div style="padding:4px 8px;border-bottom:1px solid var(--border)">';
+  html += '<select id="ast-stage-select" onchange="astStage=this.value;updateAST()" style="margin-right:8px">';
+  stageKeys.forEach(k => { html += `<option value="${k}" ${k===astStage?'selected':''}>${k}</option>`; });
+  html += '</select></div>';
+  const tree = stages[astStage];
+  if (tree) html += '<div style="padding:4px 8px">' + renderASTNode(tree, 0) + '</div>';
+  else html += '<div style="padding:8px;color:var(--dim)">No data for stage: ' + astStage + '</div>';
+  el.innerHTML = html;
+}
+
+function renderASTNode(node, depth) {
+  if (!node || typeof node !== 'object') return '';
+  const type = node.type || '?';
+  let props = '';
+  if (node.rect) props += `<span class="ast-rect">rect=(${node.rect.x},${node.rect.y} ${node.rect.w}x${node.rect.h})</span> `;
+  if (node.text !== undefined) props += `<span class="ast-prop">"${String(node.text).slice(0,20)}"</span> `;
+  if (node.bind) props += `<span class="ast-bind">bind=${node.bind}</span> `;
+  if (node._static) props += `<span class="ast-static">[STATIC]</span> `;
+  if (node.id) props += `<span class="ast-prop">${node.id}</span> `;
+  if (node.h !== undefined && type !== 'screen') props += `<span class="ast-prop">h=${node.h}</span> `;
+
+  const children = node.children || [];
+  const sections = ['bar','body','nav'].filter(s => node[s]);
+  const hasKids = children.length > 0 || sections.length > 0;
+  const id = 'ast-' + depth + '-' + Math.random().toString(36).slice(2,8);
+
+  let html = `<div class="ast-node">`;
+  if (hasKids) {
+    html += `<span class="toggle" onclick="let e=document.getElementById('${id}');e.style.display=e.style.display==='none'?'block':'none';this.textContent=e.style.display==='none'?'+':'-'">-</span> `;
+  }
+  html += `<span class="ast-type">${type}</span>${props}`;
+  if (hasKids) {
+    html += `<div class="ast-children" id="${id}">`;
+    sections.forEach(s => { html += `<div style="color:var(--dim);font-size:9px">${s}:</div>` + renderASTNode(node[s], depth+1); });
+    children.forEach(c => { html += renderASTNode(c, depth+1); });
+    html += '</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+function updateHex() {
+  if (!compileResult?.bytecode_base64) return;
+  const bytes = base64ToBytes(compileResult.bytecode_base64);
+  const el = document.getElementById('panel-hex');
+  let html = '';
+  for (let i=0; i<bytes.length; i+=16) {
+    let hexParts = '', ascii = '';
+    for (let j=0; j<16; j++) {
+      if (i+j < bytes.length) {
+        const b = bytes[i+j];
+        hexParts += `<span class="hex-byte">${b.toString(16).padStart(2,'0').toUpperCase()}</span>`;
+        ascii += (b>=32&&b<127)?String.fromCharCode(b):'.';
+      } else {
+        hexParts += `<span class="hex-byte" style="color:var(--bg2)">  </span>`;
+        ascii += ' ';
+      }
+    }
+    html += `<div class="hex-row"><span class="hex-off">${i.toString(16).padStart(4,'0').toUpperCase()}</span><span class="hex-bytes">${hexParts}</span><span class="hex-ascii">${ascii}</span></div>`;
+  }
+  el.innerHTML = html;
+}
+
+function updateStats() {
+  if (!compileResult) return;
+  const p = compileResult.program;
+  const s = p.stats || {};
+  const bar = document.getElementById('stats-bar');
+  bar.innerHTML = `NODES:<b>${s.final_nodes||0}</b> STATIC:<b style="color:var(--green)">${s.static_nodes||0}</b> DYN:<b style="color:var(--orange)">${s.dynamic_nodes||0}</b> CODE:<b>${s.code_size||0}B</b> STRINGS:<b>${s.string_count||0}</b> BINDS:<b>${s.bind_count||0}</b> REGIONS:<b>${s.region_count||0}</b>`;
+
+  const el = document.getElementById('panel-stats');
+  let html = '<div class="stats-grid">';
+  html += `<div class="stat-card"><h3>NODES</h3>Input: <span class="val">${s.input_nodes||0}</span><br>Final: <span class="val">${s.final_nodes||0}</span><br>Static: <span class="val" style="color:var(--green)">${s.static_nodes||0}</span><br>Dynamic: <span class="val" style="color:var(--orange)">${s.dynamic_nodes||0}</span></div>`;
+  html += `<div class="stat-card"><h3>BYTECODE</h3>Code size: <span class="val">${s.code_size||0} B</span><br>Binary size: <span class="val">${compileResult.binary_base64 ? Math.ceil(compileResult.binary_base64.length*3/4) : 0} B</span><br>Strings: <span class="val">${s.string_count||0}</span><br>Regions: <span class="val">${s.region_count||0}</span></div>`;
+  html += `<div class="stat-card"><h3>BINDS</h3>${(p.binds||[]).map(b=>`<span class="val">${b}</span>`).join('<br>')}</div>`;
+  html += `<div class="stat-card"><h3>STRINGS</h3>${(p.strings||[]).map((s,i)=>`<span class="ast-prop">[${i}]</span> <span class="val">"${s}"</span>`).join('<br>')}</div>`;
+  html += `<div class="stat-card"><h3>PASSES</h3>${(s.passes||[]).map(p=>`${p.name}: ${p.before} → ${p.after}`).join('<br>')}</div>`;
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+function updateManifest() {
+  const el = document.getElementById('panel-manifest');
+  el.innerHTML = '<pre>' + JSON.stringify(compileResult.program, null, 2) + '</pre>';
+}
+
+function updateRegions() {
+  const el = document.getElementById('panel-regions');
+  const regions = compileResult.program.regions || [];
+  if (regions.length === 0) { el.innerHTML = '<div style="padding:8px;color:var(--dim)">No refresh regions (no runtime binds)</div>'; return; }
+  let html = '';
+  regions.forEach((reg, i) => {
+    const r = reg.rect;
+    html += `<div class="region-item"><b>Region ${i}</b> <span class="ast-rect">(${r.x},${r.y} ${r.w}x${r.h})</span> waveform=<b>${reg.waveform}</b> binds=[${reg.bind_names.join(', ')}]</div>`;
+  });
+  el.innerHTML = html;
+}
+
+function updateBindSim() {
+  const el = document.getElementById('panel-bindsim');
+  const binds = compileResult?.program?.binds || [];
+  if (binds.length === 0) { el.innerHTML = '<div style="padding:8px;color:var(--dim)">No runtime binds in this screen</div>'; return; }
+  let html = '<div style="padding:8px"><p style="color:var(--dim);margin-bottom:8px">Enter values for runtime binds. The canvas will update.</p>';
+  binds.forEach(b => {
+    html += `<div style="margin:4px 0;display:flex;align-items:center;gap:8px"><label style="width:150px;color:var(--accent)">${b}</label><input type="text" value="${bindValues[b]||''}" onchange="bindValues['${b}']=this.value;renderCanvas()" style="background:var(--bg2);color:var(--fg);border:1px solid var(--border);padding:4px 8px;font-family:inherit;font-size:11px;width:120px"></div>`;
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+// ── Tab switching ──
+function showTab(name, btn) {
+  currentTab = name;
+  document.querySelectorAll('#bottom-tabs button').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  document.querySelectorAll('#inspector > div').forEach(d => d.style.display = 'none');
+  const panel = document.getElementById('panel-' + name);
+  if (panel) panel.style.display = 'block';
+}
+
+function showEditorTab(name, btn) {
+  currentEditorTab = name;
+  document.querySelectorAll('#editor-tabs button').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  document.getElementById('source-editor').style.display = name==='source'?'block':'none';
+  document.getElementById('props-editor').style.display = name==='props'?'block':'none';
+}
+
+// ── Presets ──
+async function loadPresets() {
+  const resp = await fetch('/api/presets');
+  const data = await resp.json();
+  const sel = document.getElementById('preset-select');
+  (data.presets||[]).forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.name; opt.textContent = p.name;
+    sel.appendChild(opt);
+  });
+}
+
+async function loadPreset(name) {
+  if (!name) return;
+  const resp = await fetch('/api/presets/' + name);
+  const data = await resp.json();
+  document.getElementById('source-editor').value = data.source || '';
+  document.getElementById('props-editor').value = data.props || '';
+  doCompile();
+}
+
+// ── Init ──
+document.getElementById('source-editor').addEventListener('input', scheduleCompile);
+document.getElementById('props-editor').addEventListener('input', scheduleCompile);
+document.getElementById('preset-select').addEventListener('change', e => loadPreset(e.target.value));
+
+loadPresets().then(() => {
+  // Auto-load first preset
+  const sel = document.getElementById('preset-select');
+  if (sel.options.length > 1) {
+    sel.selectedIndex = 1;
+    loadPreset(sel.options[1].value);
+  }
+});
+</script>
+</body>
+</html>
