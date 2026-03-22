@@ -1,0 +1,33 @@
+type: screen
+width: 220
+height: 72
+body:
+  type: fixed
+  children:
+    - type: hbox
+      x: 8
+      y: 8
+      gap: 2
+      children:
+        - type: label
+          bind: props.title
+          size: 1
+        - type: label
+          text: ": "
+          size: 1
+        - type: label
+          bind: sensor.temp
+          field_w: 4
+          size: 1
+    - type: hbox
+      x: 8
+      y: 28
+      gap: 4
+      children:
+        - type: label
+          text: "RPM"
+        - type: bar
+          bind: sensor.rpm
+          w: 100
+          h: 4
+          max: 7000

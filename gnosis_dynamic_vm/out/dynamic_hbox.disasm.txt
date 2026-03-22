@@ -1,0 +1,51 @@
+# GNDY disassembly
+nodes: 9
+binds: 3
+strings: 2
+
+# Bind table
+  [0] props.title
+  [1] sensor.temp
+  [2] sensor.rpm
+
+# String pool
+  [0] ': '
+  [1] 'RPM'
+
+# Slot init (non-zero only)
+  n3.x = 8
+  n3.y = 8
+  n3.h = 8
+  n4.y = 8
+  n4.w = 16
+  n4.h = 8
+  n5.y = 8
+  n5.w = 32
+  n5.h = 8
+  n7.x = 8
+  n7.y = 28
+  n7.w = 24
+  n7.h = 8
+  n8.x = 36
+  n8.y = 28
+  n8.w = 100
+  n8.h = 4
+
+# Code
+0000: MEASURE_TEXT_BIND  n3 bind[0] size=1
+0006: PUSH_SLOT          n3.mw
+0009: STORE_SLOT         n3.w
+000c: PUSH_SLOT          n3.mw
+000f: PUSH_CONST         10
+0012: ADD
+0013: STORE_SLOT         n4.x
+0016: PUSH_SLOT          n3.mw
+0019: PUSH_CONST         28
+001c: ADD
+001d: STORE_SLOT         n5.x
+0020: DRAW_TEXT_BIND     n3 bind[0] size=1 color=1
+0027: DRAW_TEXT_CONST    n4 string[0] size=1 color=1
+002e: DRAW_TEXT_BIND     n5 bind[1] size=1 color=1
+0035: DRAW_TEXT_CONST    n7 string[1] size=1 color=1
+003c: DRAW_BAR_BIND      n8 bind[2] max=7000 track=3 fill=1
+0045: HALT

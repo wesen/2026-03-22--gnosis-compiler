@@ -1,0 +1,32 @@
+# GNDY disassembly
+nodes: 5
+binds: 1
+strings: 1
+
+# Bind table
+  [0] props.title
+
+# String pool
+  [0] 'OK'
+
+# Slot init (non-zero only)
+  n3.x = 8
+  n3.y = 8
+  n3.h = 8
+  n4.x = 8
+  n4.y = 18
+  n4.h = 8
+
+# Code
+0000: MEASURE_TEXT_BIND  n3 bind[0] size=1
+0006: PUSH_SLOT          n3.mw
+0009: PUSH_CONST         16
+000c: MAX
+000d: STORE_SLOT         n3.w
+0010: PUSH_SLOT          n3.mw
+0013: PUSH_CONST         16
+0016: MAX
+0017: STORE_SLOT         n4.w
+001a: DRAW_TEXT_BIND     n3 bind[0] size=1 color=1
+0021: DRAW_TEXT_CONST    n4 string[0] size=1 color=1
+0028: HALT

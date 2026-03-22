@@ -1,0 +1,73 @@
+# Symbolic slot IR
+
+node n0: type=screen path=root
+  mw = 220
+  mh = 72
+   x = 0
+   y = 0
+   w = 220
+   h = 72
+
+node n1: type=fixed path=root/body:fixed
+  mw = max((s18 + 60), 136)
+  mh = 36
+   x = 0
+   y = 0
+   w = 220
+   h = 72
+
+node n2: type=hbox path=root/body:fixed/hbox[0]
+  mw = (s18 + 52)
+  mh = 8
+   x = 8
+   y = 8
+   w = (s18 + 52)
+   h = 8
+
+node n3: type=label path=root/body:fixed/hbox[0]/label[0]
+  mw = s18
+  mh = 8
+   x = 8
+   y = 8
+   w = s18
+   h = 8
+
+node n4: type=label path=root/body:fixed/hbox[0]/label[1]
+  mw = 16
+  mh = 8
+   x = (s18 + 10)
+   y = 8
+   w = 16
+   h = 8
+
+node n5: type=label path=root/body:fixed/hbox[0]/label[2]
+  mw = 32
+  mh = 8
+   x = (s18 + 28)
+   y = 8
+   w = 32
+   h = 8
+
+node n6: type=hbox path=root/body:fixed/hbox[1]
+  mw = 128
+  mh = 8
+   x = 8
+   y = 28
+   w = 128
+   h = 8
+
+node n7: type=label path=root/body:fixed/hbox[1]/label[0]
+  mw = 24
+  mh = 8
+   x = 8
+   y = 28
+   w = 24
+   h = 8
+
+node n8: type=bar path=root/body:fixed/hbox[1]/bar[1]
+  mw = 100
+  mh = 4
+   x = 36
+   y = 28
+   w = 100
+   h = 4

@@ -1,0 +1,15 @@
+type: screen
+width: 220
+height: 80
+body:
+  type: fixed
+  children:
+    - type: vbox
+      x: 8
+      y: 8
+      gap: 2
+      children:
+        - type: label
+          bind: props.title
+        - type: label
+          text: "OK"

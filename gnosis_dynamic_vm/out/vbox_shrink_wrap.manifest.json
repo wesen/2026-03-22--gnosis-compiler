@@ -1,0 +1,51 @@
+{
+  "binds": [
+    "props.title"
+  ],
+  "dynamic_slot_count": 2,
+  "glyph_h": 8,
+  "glyph_w": 8,
+  "measure_op_count": 1,
+  "nodes": [
+    {
+      "bind": null,
+      "id": 0,
+      "path": "root",
+      "text": null,
+      "type": "screen"
+    },
+    {
+      "bind": null,
+      "id": 1,
+      "path": "root/body:fixed",
+      "text": null,
+      "type": "fixed"
+    },
+    {
+      "bind": null,
+      "id": 2,
+      "path": "root/body:fixed/vbox[0]",
+      "text": null,
+      "type": "vbox"
+    },
+    {
+      "bind": "props.title",
+      "id": 3,
+      "path": "root/body:fixed/vbox[0]/label[0]",
+      "text": "",
+      "type": "label"
+    },
+    {
+      "bind": null,
+      "id": 4,
+      "path": "root/body:fixed/vbox[0]/label[1]",
+      "text": "OK",
+      "type": "label"
+    }
+  ],
+  "render_op_count": 2,
+  "strings": [
+    "OK"
+  ],
+  "version": 1
+}
