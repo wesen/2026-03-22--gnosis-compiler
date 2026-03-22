@@ -1,0 +1,85 @@
+type: screen
+width: 400
+height: 280
+bar:
+  type: hbox
+  h: 16
+  border_b: true
+  children:
+    - type: label
+      text: "{{title}}"
+    - type: spacer
+    - type: label
+      text: "{{status}}"
+      color: mid
+body:
+  type: hbox
+  split: 260
+  children:
+    - type: fixed
+      children:
+        - type: label
+          x: 8
+          y: 6
+          text: TEMPORAL MAP
+          color: ghost
+        - type: label
+          x: 8
+          y: 22
+          text: "{{month}}"
+          size: 2
+        - type: grid
+          x: 8
+          y: 50
+          cols: 7
+          cell_w: 35
+          cell_h: 26
+          data: { $prop: calendar_days }
+    - type: fixed
+      children:
+        - type: label
+          x: 8
+          y: 6
+          text: AGENDA
+          color: ghost
+        - type: label
+          x: 8
+          y: 22
+          text: "{{date}}"
+        - type: list
+          x: 8
+          y: 40
+          w: 120
+          h: 80
+          row_h: 20
+          max_items: 4
+          data: { $prop: agenda }
+        - type: sep
+          x: 0
+          y: 130
+          w: 140
+        - type: label
+          x: 8
+          y: 138
+          text: UPCOMING
+          color: ghost
+        - type: list
+          x: 8
+          y: 154
+          w: 120
+          h: 48
+          row_h: 16
+          max_items: 3
+          data: { $prop: upcoming }
+nav:
+  type: hbox
+  h: 16
+  border_t: true
+  children:
+    - type: label
+      text: NAV
+      color: mid
+    - type: spacer
+    - type: label
+      text: "{{footer}}"
+      color: mid

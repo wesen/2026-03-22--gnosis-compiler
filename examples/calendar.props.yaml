@@ -1,0 +1,46 @@
+title: GNOSIS//CAL
+status: "SIG:97%"
+month: MARCH 2026
+date: "2026.03.22"
+footer: AUTO
+calendar_days:
+  - {text: "1"}
+  - {text: "2"}
+  - {text: "3", event: true}
+  - {text: "4"}
+  - {text: "5"}
+  - {text: "6"}
+  - {text: "7", event: true}
+  - {text: "8"}
+  - {text: "9"}
+  - {text: "10"}
+  - {text: "11"}
+  - {text: "12", event: true}
+  - {text: "13"}
+  - {text: "14"}
+  - {text: "15", event: true}
+  - {text: "16"}
+  - {text: "17"}
+  - {text: "18"}
+  - {text: "19"}
+  - {text: "20"}
+  - {text: "21", today: true, event: true}
+  - {text: "22"}
+  - {text: "23"}
+  - {text: "24"}
+  - {text: "25", event: true}
+  - {text: "26"}
+  - {text: "27"}
+  - {text: "28", event: true}
+  - {text: "29"}
+  - {text: "30"}
+  - {text: "31"}
+agenda:
+  - "09:00 Team sync"
+  - "11:30 Design rev"
+  - "14:00 EPD testing"
+  - "16:30 Code review"
+upcoming:
+  - "03.24 Sprint end"
+  - "03.27 Demo day"
+  - "04.01 Release v4"

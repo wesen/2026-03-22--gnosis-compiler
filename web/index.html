@@ -20,11 +20,14 @@ select { font-family:inherit; background:var(--bg2); color:var(--fg); border:1px
 textarea { font-family:inherit; background:transparent; color:#807c70; border:none; outline:none; resize:none; font-size:11px; line-height:1.6; tab-size:2; width:100%; }
 
 /* Layout */
-#app { display:grid; grid-template-columns:380px 1fr; grid-template-rows:auto 1fr auto 260px; height:100vh; }
+#app { display:grid; grid-template-columns:380px 1fr; grid-template-rows:auto 1fr 5px auto var(--inspector-h,260px); height:100vh; }
+#resize-handle { grid-column:2; height:5px; cursor:ns-resize; background:transparent; position:relative; z-index:10; }
+#resize-handle::after { content:''; position:absolute; left:50%; top:1px; transform:translateX(-50%); width:40px; height:3px; border-radius:2px; background:var(--border); transition:background .15s; }
+#resize-handle:hover::after, #resize-handle.dragging::after { background:var(--accent); }
 #header { grid-column:1/-1; padding:6px 12px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:16px; background:var(--bg2); }
 #header h1 { font-size:10px; letter-spacing:3px; color:var(--dim); font-weight:normal; }
 
-#left { grid-row:2/5; border-right:1px solid var(--border); display:flex; flex-direction:column; background:var(--bg2); }
+#left { grid-row:2/6; border-right:1px solid var(--border); display:flex; flex-direction:column; background:var(--bg2); }
 #editor-tabs { display:flex; border-bottom:1px solid var(--border); }
 #source-wrap { flex:1; overflow:hidden; position:relative; }
 #source-wrap textarea { height:100%; padding:8px; }
@@ -120,6 +123,7 @@ textarea { font-family:inherit; background:transparent; color:#807c70; border:no
     </div>
   </div>
 
+  <div id="resize-handle"></div>
   <div id="bottom-tabs">
     <button class="active" onclick="showTab('disasm',this)">DISASSEMBLY</button>
     <button onclick="showTab('ast',this)">AST</button>
@@ -572,6 +576,35 @@ async function loadPreset(name) {
 document.getElementById('source-editor').addEventListener('input', scheduleCompile);
 document.getElementById('props-editor').addEventListener('input', scheduleCompile);
 document.getElementById('preset-select').addEventListener('change', e => loadPreset(e.target.value));
+
+// ── Resize handle drag ──
+(function() {
+  const handle = document.getElementById('resize-handle');
+  const app = document.getElementById('app');
+  let dragging = false, startY = 0, startH = 0;
+
+  handle.addEventListener('mousedown', e => {
+    dragging = true; startY = e.clientY;
+    startH = parseInt(getComputedStyle(app).getPropertyValue('--inspector-h')) || 260;
+    handle.classList.add('dragging');
+    document.body.style.cursor = 'ns-resize';
+    document.body.style.userSelect = 'none';
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const delta = startY - e.clientY;
+    const newH = Math.max(80, Math.min(window.innerHeight - 200, startH + delta));
+    app.style.setProperty('--inspector-h', newH + 'px');
+  });
+  document.addEventListener('mouseup', () => {
+    if (!dragging) return;
+    dragging = false;
+    handle.classList.remove('dragging');
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+  });
+})();
 
 loadPresets().then(() => {
   // Auto-load first preset

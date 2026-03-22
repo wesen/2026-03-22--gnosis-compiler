@@ -1,0 +1,68 @@
+type: screen
+width: 400
+height: 280
+bar:
+  type: hbox
+  h: 16
+  border_b: true
+  children:
+    - type: label
+      text: GNOSIS//BOOT
+    - type: spacer
+body:
+  type: fixed
+  children:
+    - type: circle
+      cx: 200
+      cy: 110
+      r: 70
+    - type: circle
+      cx: 200
+      cy: 110
+      r: 50
+    - type: circle
+      cx: 200
+      cy: 110
+      r: 28
+    - type: circle
+      cx: 200
+      cy: 110
+      r: 8
+    - type: cross
+      cx: 200
+      cy: 110
+      len: 80
+    - type: label
+      x: 162
+      y: 192
+      text: GNOSIS
+      size: 2
+    - type: label
+      x: 108
+      y: 214
+      text: E-INK OPERATING SYSTEM
+      color: mid
+    - type: bar
+      x: 100
+      y: 234
+      w: 200
+      h: 3
+      value: 72
+      max: 100
+    - type: label
+      x: 190
+      y: 242
+      text: "72%"
+      color: ghost
+nav:
+  type: hbox
+  h: 16
+  border_t: true
+  children:
+    - type: label
+      text: "INITIATED:2022"
+      color: ghost
+    - type: spacer
+    - type: label
+      text: PIXEL MONO
+      color: ghost

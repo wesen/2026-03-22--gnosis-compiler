@@ -1,0 +1,161 @@
+type: screen
+width: 400
+height: 280
+bar:
+  type: hbox
+  h: 16
+  border_b: true
+  children:
+    - type: label
+      text: WIDGET GALLERY
+    - type: spacer
+    - type: label
+      text: DEBUG
+      color: ghost
+body:
+  type: hbox
+  split: 200
+  children:
+    - type: fixed
+      children:
+        - type: label
+          x: 8
+          y: 8
+          text: SIZE 1 TEXT
+        - type: label
+          x: 8
+          y: 22
+          text: SIZE 2
+          size: 2
+        - type: label
+          x: 8
+          y: 44
+          text: BIG
+          size: 4
+        - type: sep
+          x: 8
+          y: 80
+          w: 180
+        - type: label
+          x: 8
+          y: 88
+          text: BARS
+          color: ghost
+        - type: bar
+          x: 8
+          y: 102
+          w: 180
+          h: 4
+          value: 65
+          max: 100
+        - type: bar
+          x: 8
+          y: 112
+          w: 180
+          h: 4
+          value: 30
+          max: 100
+        - type: bar
+          x: 8
+          y: 122
+          w: 180
+          h: 6
+          value: 88
+          max: 100
+          fill_color: mid
+        - type: sep
+          x: 8
+          y: 140
+          w: 180
+        - type: label
+          x: 8
+          y: 148
+          text: SHAPES
+          color: ghost
+        - type: circle
+          cx: 50
+          cy: 200
+          r: 30
+        - type: circle
+          cx: 50
+          cy: 200
+          r: 18
+        - type: cross
+          cx: 50
+          cy: 200
+          len: 10
+        - type: circle
+          cx: 140
+          cy: 200
+          r: 25
+        - type: circle
+          cx: 140
+          cy: 200
+          r: 35
+    - type: fixed
+      children:
+        - type: label
+          x: 8
+          y: 8
+          text: LIST
+          color: ghost
+        - type: list
+          x: 8
+          y: 22
+          w: 180
+          h: 110
+          row_h: 18
+          max_items: 6
+          selected: 2
+          data:
+            - List item 0
+            - List item 1
+            - Selected item
+            - List item 3
+            - List item 4
+            - List item 5
+        - type: sep
+          x: 0
+          y: 140
+          w: 200
+        - type: label
+          x: 8
+          y: 148
+          text: BOUND VALUES
+          color: ghost
+        - type: label
+          x: 8
+          y: 164
+          bind: demo.text
+          field_w: 12
+          waveform: fast
+        - type: bar
+          x: 8
+          y: 184
+          w: 180
+          h: 6
+          bind: demo.bar
+          max: 100
+          waveform: fast
+        - type: label
+          x: 8
+          y: 200
+          text: INVERTED
+          color: ghost
+        - type: label
+          x: 8
+          y: 216
+          text: INVERTED LABEL
+          invert: true
+nav:
+  type: hbox
+  h: 16
+  border_t: true
+  children:
+    - type: label
+      text: DBG
+      color: mid
+    - type: spacer
+    - type: label
+      text: GALLERY
+      color: ghost
