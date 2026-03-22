@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import copy
 from dataclasses import asdict, dataclass
 from typing import Any
 
-from .dsl import prepare_source
+from .dsl import load_source, normalize_screen, prepare_source, resolve_props
 from .layout import layout_screen
 from .lower import lower_screen, merge_regions
 from .model import CompileOptions, Program
@@ -15,9 +16,30 @@ class Compiler:
     def __init__(self, options: CompileOptions | None = None) -> None:
         self.options = options or CompileOptions()
 
+    def compile_with_stages(self, source: Any, props: dict[str, Any] | None = None) -> tuple[Program, dict[str, Any]]:
+        """Compile and return (program, stages) where stages captures each intermediate AST."""
+        stages: dict[str, Any] = {}
+
+        loaded = load_source(source)
+        stages['parsed'] = copy.deepcopy(loaded)
+
+        if props is not None and not isinstance(props, dict):
+            props = load_source(props)
+        resolved = resolve_props(loaded, props)
+        stages['resolved'] = copy.deepcopy(resolved)
+
+        canonical = normalize_screen(resolved)
+        stages['canonical'] = copy.deepcopy(canonical)
+
+        program = self._compile_from_canonical(canonical, stages)
+        return program, stages
+
     def compile(self, source: Any, props: dict[str, Any] | None = None) -> Program:
         prepared = prepare_source(source, props)
+        return self._compile_from_canonical(prepared)
 
+    def _compile_from_canonical(self, prepared: dict[str, Any],
+                                 stages: dict[str, Any] | None = None) -> Program:
         stats: dict[str, Any] = {
             'passes': [],
         }
@@ -28,6 +50,8 @@ class Compiler:
         prepared = self._apply_screen_pass(prepared, eliminate_dead_nodes)
         after_dead = self._count_screen_nodes(prepared)
         stats['passes'].append({'name': 'dead_node_elimination', 'before': before_nodes, 'after': after_dead})
+        if stages is not None:
+            stages['after_dead_elimination'] = copy.deepcopy(prepared)
 
         flattened_once = self._apply_screen_pass(prepared, flatten_boxes)
         after_flatten = self._count_screen_nodes(flattened_once)
@@ -36,13 +60,19 @@ class Compiler:
         flattened_twice = self._apply_screen_pass(flattened_once, flatten_boxes)
         after_second_flatten = self._count_screen_nodes(flattened_twice)
         stats['passes'].append({'name': 'flatten_boxes_fixed_point', 'before': after_flatten, 'after': after_second_flatten})
+        if stages is not None:
+            stages['after_flatten'] = copy.deepcopy(flattened_twice)
 
         prepared = self._apply_screen_pass(flattened_twice, assign_ids)
         prepared = self._apply_screen_mark_static(prepared)
+        if stages is not None:
+            stages['after_classify'] = copy.deepcopy(prepared)
 
         width = int(prepared.get('width') or self.options.width)
         height = int(prepared.get('height') or self.options.height)
         laid_out = layout_screen(prepared, width, height, self.options.glyph_w, self.options.glyph_h)
+        if stages is not None:
+            stages['laid_out'] = copy.deepcopy(laid_out)
 
         code, strings, binds, bind_sites = lower_screen(laid_out)
         regions = merge_regions(bind_sites, self.options.region_merge_threshold)
