@@ -13,6 +13,7 @@ interface CompilerState {
   error: string | null;
   bindValues: Record<string, string>;
   autoCompile: boolean;
+  selectedPreset: string;
 }
 
 const initialState: CompilerState = {
@@ -24,6 +25,7 @@ const initialState: CompilerState = {
   error: null,
   bindValues: {},
   autoCompile: true,
+  selectedPreset: '',
 };
 
 const compilerSlice = createSlice({
@@ -44,6 +46,9 @@ const compilerSlice = createSlice({
     },
     setBindValue(state, action: PayloadAction<{ name: string; value: string }>) {
       state.bindValues[action.payload.name] = action.payload.value;
+    },
+    setSelectedPreset(state, action: PayloadAction<string>) {
+      state.selectedPreset = action.payload;
     },
     clearError(state) {
       state.error = null;
@@ -85,6 +90,7 @@ export const {
   setPropsText,
   setAutoCompile,
   setBindValue,
+  setSelectedPreset,
   clearError,
 } = compilerSlice.actions;
 

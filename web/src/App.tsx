@@ -5,8 +5,10 @@ import { ResizeHandle } from './components/ResizeHandle';
 import { TabBar } from './components/Inspector/TabBar';
 import { Inspector } from './components/Inspector/Inspector';
 import { useAutoCompile } from './hooks/useAutoCompile';
+import { useAutoLoadPreset } from './hooks/useAutoLoadPreset';
 
 export function App() {
+  useAutoLoadPreset();
   useAutoCompile();
 
   return (

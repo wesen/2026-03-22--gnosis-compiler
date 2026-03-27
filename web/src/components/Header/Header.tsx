@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { setSourceText, setPropsText, setAutoCompile, setMode, type CompilerMode } from '../../store/slices/compilerSlice';
+import { setSourceText, setPropsText, setAutoCompile, setMode, setSelectedPreset, type CompilerMode } from '../../store/slices/compilerSlice';
 import { useCompileMutation, useGetPresetsQuery, useLazyGetPresetQuery } from '../../store/api';
 import { PARTS } from './parts';
 
@@ -12,6 +12,7 @@ export function Header() {
   const compileResult = useAppSelector((s) => s.compiler.compileResult);
   const compileStatus = useAppSelector((s) => s.compiler.compileStatus);
   const mode = useAppSelector((s) => s.compiler.mode);
+  const selectedPreset = useAppSelector((s) => s.compiler.selectedPreset);
   const error = useAppSelector((s) => s.compiler.error);
 
   const { data: presetsData } = useGetPresetsQuery();
@@ -25,6 +26,7 @@ export function Header() {
   const handlePresetChange = useCallback(
     async (name: string) => {
       if (!name) return;
+      dispatch(setSelectedPreset(name));
       const result = await getPreset(name).unwrap();
       dispatch(setSourceText(result.source || ''));
       dispatch(setPropsText(result.props || ''));
@@ -60,8 +62,8 @@ export function Header() {
 
       <select
         data-part={PARTS.presetSelect}
+        value={selectedPreset}
         onChange={(e) => handlePresetChange(e.target.value)}
-        defaultValue=""
       >
         <option value="">-- select preset --</option>
         {(presetsData?.presets ?? []).map((p) => (

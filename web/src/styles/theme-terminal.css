@@ -1,5 +1,6 @@
 /* Terminal theme — dark monochrome (default) */
-:where([data-widget="gnosis-workbench"]) {
+/* Tokens on :root so body and all elements can inherit them */
+:root {
   /* Color tokens */
   --color-bg: #0c0b0a;
   --color-bg2: #161513;
