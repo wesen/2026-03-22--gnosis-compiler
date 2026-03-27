@@ -521,3 +521,111 @@ Supporting ticket files updated:
 - `ttmp/2026/03/27/GNOSIS-005--react-dynamic-vm-debugger-implementation-guide/tasks.md`
 - `ttmp/2026/03/27/GNOSIS-005--react-dynamic-vm-debugger-implementation-guide/changelog.md`
 - `ttmp/2026/03/27/GNOSIS-005--react-dynamic-vm-debugger-implementation-guide/reference/01-investigation-diary.md`
+
+
+## Step 5: Implement Multi-Pane Debugger and Interactive VM Explorer
+
+This step covered two major implementation efforts: (1) converting the tab-switching debugger into a simultaneous multi-pane layout, and (2) building 7 Bret Victor-style interactive article widgets as Storybook stories.
+
+### Multi-pane debugger (Phase 1 from Design Doc 02)
+
+The key architectural change was making the debugger a first-class layout mode. When the debugger is loaded, `App.tsx` switches from the normal `Canvas + ResizeHandle + TabBar + Inspector` layout to a single `<DebuggerLayout>` component that fills the right column with a CSS grid of four panes: Canvas (top ~40%), Disassembly (bottom-left), Slots (top-right), and Stack (bottom-right).
+
+Step controls (STEP, BACK, RUN, RUN>BP, RESET, VALIDATE, CLOSE) were moved from the DebuggerPanel into the Header component, conditional on `debuggerStatus !== 'idle'`. This frees up all four panes to show data simultaneously. The existing module-level singleton pattern for `GNDYDebugger` and `GNDYProgram` was preserved since it works and the multi-pane layout may still unmount panes during mode transitions.
+
+The `debuggerSlice` was extended with `DebuggerLayout` (canvasHeightPercent, disasmWidthPercent, slotsHeightPercent, hideZeroNodes) and `highlightedNode` for future connected highlighting work. A reusable `Splitter` component handles both horizontal and vertical pane resizing with double-click-to-reset.
+
+CSS follows the existing workbench pattern: `:where([data-widget="gnosis-workbench"])` root, `data-part` selectors, CSS variables from theme-terminal.css, low-specificity `:where()` wrappers. A new `debugger.css` stylesheet holds all debugger-specific rules.
+
+### Interactive VM Explorer (Phase 3 from Design Doc 02)
+
+Seven self-contained widgets were built as Storybook stories, each embedded in article prose that teaches one VM concept:
+
+1. **StackCalculator** — Editable constants, animated push/pop, step/back/run controls. Teaches the LIFO stack and STORE_SLOT.
+2. **SlotGrid** — Editable runtime text/size, node grid with 6 fields, step-through showing MEASURE→PUSH→STORE writes. Teaches the slot addressing model.
+3. **CanvasPreview** — Draggable x/y/w/h sliders, live canvas with bounding box, color palette. Teaches DRAW instructions mapping slots to pixels.
+4. **Pipeline** — Phase timeline scrubber (MEASURE→COMPUTE→RENDER→DONE), three-column view, editable temp slider. Teaches execution phases.
+5. **HexViewer** — Interactive hex dump of a sample GNDY file, hover/click annotations, region legend. Teaches the binary format.
+6. **DualRuntime** — Two side-by-side runtime panels with same bytecode, slot diff view, swap button. Teaches runtime binding.
+7. **LayoutBuilder** — Element palette (Label/Bar/HLine), click-to-select, property editor, live YAML and bytecode generation. Teaches the full pipeline.
+
+Each widget is fully self-contained (no Redux, no backend calls) with its own mini-interpreter. This was a deliberate choice so the Storybook stories work independently.
+
+### Storybook stories added
+
+New component stories were also added for existing components that had no stories: Header (Default, WithDebuggerControls, WithOraclePass), Canvas, Editor (Empty, WithSource), Inspector. The `storeFactory.tsx` was updated to include the debugger reducer.
+
+### What worked
+
+- The `data-state="debugging"` approach on the workbench root made the CSS grid transition clean — just override `grid-template-rows` for the debugging state.
+- Self-contained widgets with internal mini-interpreters worked well for the article mode. No Redux coordination needed.
+- Committing after each widget made the git history very clean: 7 focused commits, each with article prose + widget + CSS.
+
+### What was tricky
+
+- The CSS grid percentages for the debugger layout needed careful handling. Using inline styles with percentage strings derived from Redux state works but requires calculating from the container size for splitter deltas.
+- An auto-commit hook fired during development, which pre-committed the multi-pane debugger changes before the manual commit message could be written.
+- The Storybook stories need `require()` to inject module-level singletons for `_program` in the DisassemblyPane and StackPane stories. This is a workaround for the singleton pattern.
+
+### What didn't work
+
+- Passing `_snapshot` through Storybook `args` for components that don't have that prop caused TypeScript errors. Solved by using per-story decorators instead of args.
+
+### What should be done in the future
+
+- Connected highlighting (Phase 2): wire up `highlightedNode` so clicking canvas elements highlights the corresponding instruction in the disassembly and vice versa.
+- Keyboard shortcuts: N=step, B=back, R=run, space=step, Esc=close debugger.
+- Persist pane sizes to localStorage.
+- Animation for stack push/pop in the explorer widgets.
+- Consider moving the module-level debugger singleton into a React context now that all panes are always mounted.
+
+### Code review instructions
+
+- Verify all 7 explorer widgets render correctly in Storybook (`npx storybook dev`).
+- Load the sensor_dashboard preset, click DEBUGGER tab, click LOAD. All four panes should be visible simultaneously.
+- Step through the program. Verify slots highlight changes, stack shows context hints, canvas updates incrementally.
+- Click VALIDATE — should show ORACLE: PASS.
+- Click CLOSE — should return to normal tab-based mode.
+
+### Technical details
+
+Files created (multi-pane debugger):
+- `web/src/components/Debugger/parts.ts`
+- `web/src/components/Debugger/Splitter.tsx`
+- `web/src/components/Debugger/CanvasPane.tsx`
+- `web/src/components/Debugger/DisassemblyPane.tsx`
+- `web/src/components/Debugger/SlotsPane.tsx`
+- `web/src/components/Debugger/StackPane.tsx`
+- `web/src/components/Debugger/DebuggerLayout.tsx`
+- `web/src/components/Debugger/index.ts`
+- `web/src/styles/debugger.css`
+
+Files created (explorer widgets):
+- `web/src/components/Explorer/widgets/StackCalculator.tsx` + `.stories.tsx`
+- `web/src/components/Explorer/widgets/SlotGrid.tsx` + `.stories.tsx`
+- `web/src/components/Explorer/widgets/CanvasPreview.tsx` + `.stories.tsx`
+- `web/src/components/Explorer/widgets/Pipeline.tsx` + `.stories.tsx`
+- `web/src/components/Explorer/widgets/HexViewer.tsx` + `.stories.tsx`
+- `web/src/components/Explorer/widgets/DualRuntime.tsx` + `.stories.tsx`
+- `web/src/components/Explorer/widgets/LayoutBuilder.tsx` + `.stories.tsx`
+- `web/src/styles/explorer.css`
+
+Files created (stories + test helpers):
+- `web/src/test/mockDebugger.ts`
+- `web/src/components/Debugger/DisassemblyPane.stories.tsx`
+- `web/src/components/Debugger/SlotsPane.stories.tsx`
+- `web/src/components/Debugger/StackPane.stories.tsx`
+- `web/src/components/Debugger/Splitter.stories.tsx`
+- `web/src/components/Header/Header.stories.tsx`
+- `web/src/components/Canvas/Canvas.stories.tsx`
+- `web/src/components/Editor/Editor.stories.tsx`
+- `web/src/components/Inspector/Inspector.stories.tsx`
+
+Files modified:
+- `web/src/App.tsx` — conditional debugger layout rendering
+- `web/src/main.tsx` — import debugger.css and explorer.css
+- `web/src/styles/workbench.css` — debugging state grid rules
+- `web/src/store/slices/debuggerSlice.ts` — layout state, highlightedNode
+- `web/src/components/Header/Header.tsx` — step controls
+- `web/src/test/storeFactory.tsx` — debugger reducer
+- `web/.storybook/preview.ts` — CSS imports
