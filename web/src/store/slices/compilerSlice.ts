@@ -17,7 +17,7 @@ interface CompilerState {
 }
 
 const initialState: CompilerState = {
-  mode: 'static',
+  mode: 'dynamic',
   sourceText: '',
   propsText: '',
   compileResult: null,

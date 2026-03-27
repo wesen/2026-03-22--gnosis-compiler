@@ -1,63 +1,67 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-
-/**
- * GNOSIS-003 dynamic VM state — stub for Phase 7.
- * Will hold runtime payloads, debugger snapshots, slot tables, stack state.
- */
-
-interface DynamicRuntime {
-  name: string;
-  data: string;
-}
-
-interface DebuggerState {
-  pc: number;
-  phase: 'idle' | 'measure' | 'compute' | 'render' | 'halted';
-  stepHistory: unknown[];
-}
+import type { DynamicCompileResponse, RuntimePayload } from '../../types/api';
+import { compilerApi } from '../api';
 
 interface DynamicState {
-  runtimeA: DynamicRuntime;
-  runtimeB: DynamicRuntime;
+  runtimes: RuntimePayload[];
+  compileResult: DynamicCompileResponse | null;
+  compileStatus: 'idle' | 'compiling' | 'success' | 'error';
+  error: string | null;
+  selectedEvaluation: number;
   compareEnabled: boolean;
-  debugger: DebuggerState;
 }
 
 const initialState: DynamicState = {
-  runtimeA: { name: 'Runtime A', data: '' },
-  runtimeB: { name: 'Runtime B', data: '' },
+  runtimes: [],
+  compileResult: null,
+  compileStatus: 'idle',
+  error: null,
+  selectedEvaluation: 0,
   compareEnabled: false,
-  debugger: {
-    pc: 0,
-    phase: 'idle',
-    stepHistory: [],
-  },
 };
 
 const dynamicSlice = createSlice({
   name: 'dynamic',
   initialState,
   reducers: {
-    setRuntimeA(state, action: PayloadAction<DynamicRuntime>) {
-      state.runtimeA = action.payload;
+    setRuntimes(state, action: PayloadAction<RuntimePayload[]>) {
+      state.runtimes = action.payload;
     },
-    setRuntimeB(state, action: PayloadAction<DynamicRuntime>) {
-      state.runtimeB = action.payload;
+    setSelectedEvaluation(state, action: PayloadAction<number>) {
+      state.selectedEvaluation = action.payload;
     },
     setCompareEnabled(state, action: PayloadAction<boolean>) {
       state.compareEnabled = action.payload;
     },
-    resetDebugger(state) {
-      state.debugger = { pc: 0, phase: 'idle', stepHistory: [] };
-    },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addMatcher(compilerApi.endpoints.compileDynamic.matchPending, (state) => {
+        state.compileStatus = 'compiling';
+        state.error = null;
+      })
+      .addMatcher(compilerApi.endpoints.compileDynamic.matchFulfilled, (state, action) => {
+        const data = action.payload;
+        if (!data.success) {
+          state.compileStatus = 'error';
+          state.error = data.error ?? 'Unknown error';
+          return;
+        }
+        state.compileStatus = 'success';
+        state.compileResult = data;
+        state.error = null;
+      })
+      .addMatcher(compilerApi.endpoints.compileDynamic.matchRejected, (state, action) => {
+        state.compileStatus = 'error';
+        state.error = action.error.message ?? 'Network error';
+      });
   },
 });
 
 export const {
-  setRuntimeA,
-  setRuntimeB,
+  setRuntimes,
+  setSelectedEvaluation,
   setCompareEnabled,
-  resetDebugger,
 } = dynamicSlice.actions;
 
 export default dynamicSlice.reducer;

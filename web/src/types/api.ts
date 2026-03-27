@@ -99,3 +99,78 @@ export interface PresetDetailResponse {
   source: string;
   props: string;
 }
+
+// ---------------------------------------------------------------------------
+// Dynamic VM types
+// ---------------------------------------------------------------------------
+
+/** Runtime payload for dynamic evaluation */
+export interface RuntimePayload {
+  name: string;
+  data: Record<string, unknown>;
+}
+
+/** Request body for POST /api/compile-dynamic */
+export interface DynamicCompileRequest {
+  source: string;
+  runtimes: RuntimePayload[];
+}
+
+/** Draw operation from dynamic VM evaluation */
+export interface DrawOp {
+  type: string;
+  node: number;
+  source?: string;
+  bind?: string | null;
+  text?: string;
+  value?: number;
+  max?: number;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  size?: number;
+  color?: number;
+  intrinsic_w?: number;
+  fill_w?: number;
+  track?: number;
+  fill?: number;
+}
+
+/** Single runtime evaluation result */
+export interface EvaluationResult {
+  name: string;
+  runtime_data: Record<string, unknown>;
+  slots: Record<string, number>;
+  draw_ops: DrawOp[];
+}
+
+/** Dynamic program manifest */
+export interface DynamicProgramManifest {
+  node_count: number;
+  slot_count: number;
+  binds: string[];
+  strings: string[];
+  slot_init: Record<string, number>;
+  code_size: number;
+  code_base64: string;
+  binary_base64: string;
+}
+
+/** Response from POST /api/compile-dynamic */
+export interface DynamicCompileResponse {
+  success: boolean;
+  error?: string;
+  program: DynamicProgramManifest;
+  disassembly: string;
+  ir: string;
+  slot_expressions: Record<string, string>;
+  evaluations: EvaluationResult[];
+}
+
+/** Response from GET /api/presets-dynamic/<name> */
+export interface DynamicPresetDetailResponse {
+  name: string;
+  source: string;
+  runtimes: RuntimePayload[];
+}

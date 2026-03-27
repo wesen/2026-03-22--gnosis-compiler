@@ -1,0 +1,14 @@
+- name: Normal readings
+  data:
+    props:
+      title: "LAB-01"
+    sensor:
+      temp: 22
+      humidity: 45
+- name: High readings
+  data:
+    props:
+      title: "FURNACE"
+    sensor:
+      temp: 85
+      humidity: 12

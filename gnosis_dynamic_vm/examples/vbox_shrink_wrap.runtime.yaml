@@ -1,0 +1,8 @@
+- name: Short
+  data:
+    props:
+      title: "Hi"
+- name: Long
+  data:
+    props:
+      title: "Hello World"

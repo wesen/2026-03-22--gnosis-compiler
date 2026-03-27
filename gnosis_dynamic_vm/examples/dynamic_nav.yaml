@@ -1,0 +1,48 @@
+type: screen
+width: 220
+height: 72
+bar:
+  type: hbox
+  h: 14
+  gap: 2
+  children:
+    - type: label
+      bind: props.title
+    - type: spacer
+    - type: label
+      bind: status.time
+      field_w: 5
+body:
+  type: fixed
+  children:
+    - type: vbox
+      x: 8
+      y: 4
+      gap: 2
+      children:
+        - type: hbox
+          gap: 2
+          children:
+            - type: label
+              text: "VAL:"
+            - type: label
+              bind: sensor.value
+              field_w: 6
+        - type: bar
+          bind: sensor.value
+          w: 200
+          h: 8
+          max: 1000
+          track: light
+          fill: fg
+nav:
+  type: hbox
+  h: 12
+  children:
+    - type: label
+      bind: status.msg
+      color: ghost
+    - type: spacer
+    - type: label
+      text: "v1.0"
+      color: ghost

@@ -1,0 +1,14 @@
+- name: Short title
+  data:
+    props:
+      title: "T"
+    sensor:
+      temp: "72"
+      rpm: 3500
+- name: Long title
+  data:
+    props:
+      title: "Temperature"
+    sensor:
+      temp: "24.5"
+      rpm: 5200

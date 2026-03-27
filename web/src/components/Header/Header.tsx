@@ -1,7 +1,15 @@
 import { useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { setSourceText, setPropsText, setAutoCompile, setMode, setSelectedPreset, type CompilerMode } from '../../store/slices/compilerSlice';
-import { useCompileMutation, useGetPresetsQuery, useLazyGetPresetQuery } from '../../store/api';
+import {
+  setSourceText, setPropsText, setAutoCompile,
+  setMode, setSelectedPreset, type CompilerMode,
+} from '../../store/slices/compilerSlice';
+import { setRuntimes } from '../../store/slices/dynamicSlice';
+import {
+  useCompileMutation, useCompileDynamicMutation,
+  useGetPresetsQuery, useLazyGetPresetQuery,
+  useGetDynamicPresetsQuery, useLazyGetDynamicPresetQuery,
+} from '../../store/api';
 import { PARTS } from './parts';
 
 export function Header() {
@@ -14,34 +22,70 @@ export function Header() {
   const mode = useAppSelector((s) => s.compiler.mode);
   const selectedPreset = useAppSelector((s) => s.compiler.selectedPreset);
   const error = useAppSelector((s) => s.compiler.error);
+  const dynamicResult = useAppSelector((s) => s.dynamic.compileResult);
+  const dynamicStatus = useAppSelector((s) => s.dynamic.compileStatus);
+  const dynamicError = useAppSelector((s) => s.dynamic.error);
+  const runtimes = useAppSelector((s) => s.dynamic.runtimes);
 
-  const { data: presetsData } = useGetPresetsQuery();
-  const [getPreset] = useLazyGetPresetQuery();
-  const [compile] = useCompileMutation();
+  const { data: staticPresets } = useGetPresetsQuery();
+  const { data: dynamicPresets } = useGetDynamicPresetsQuery();
+  const [getStaticPreset] = useLazyGetPresetQuery();
+  const [getDynamicPreset] = useLazyGetDynamicPresetQuery();
+  const [compileStatic] = useCompileMutation();
+  const [compileDynamic] = useCompileDynamicMutation();
 
   const handleCompile = useCallback(() => {
-    compile({ source: sourceText, props: propsText });
-  }, [compile, sourceText, propsText]);
+    if (mode === 'dynamic') {
+      compileDynamic({ source: sourceText, runtimes });
+    } else {
+      compileStatic({ source: sourceText, props: propsText });
+    }
+  }, [mode, compileStatic, compileDynamic, sourceText, propsText, runtimes]);
 
   const handlePresetChange = useCallback(
     async (name: string) => {
       if (!name) return;
       dispatch(setSelectedPreset(name));
-      const result = await getPreset(name).unwrap();
-      dispatch(setSourceText(result.source || ''));
-      dispatch(setPropsText(result.props || ''));
+      if (mode === 'dynamic') {
+        const result = await getDynamicPreset(name).unwrap();
+        dispatch(setSourceText(result.source || ''));
+        dispatch(setPropsText(''));
+        dispatch(setRuntimes(result.runtimes || []));
+      } else {
+        const result = await getStaticPreset(name).unwrap();
+        dispatch(setSourceText(result.source || ''));
+        dispatch(setPropsText(result.props || ''));
+      }
     },
-    [getPreset, dispatch],
+    [mode, getStaticPreset, getDynamicPreset, dispatch],
   );
 
+  const handleModeSwitch = useCallback(
+    (m: CompilerMode) => {
+      if (m === mode) return;
+      dispatch(setMode(m));
+      dispatch(setSourceText(''));
+      dispatch(setPropsText(''));
+      dispatch(setSelectedPreset(''));
+    },
+    [mode, dispatch],
+  );
+
+  const presets = mode === 'dynamic' ? dynamicPresets : staticPresets;
+
+  // Status text depends on mode
+  const activeStatus = mode === 'dynamic' ? dynamicStatus : compileStatus;
+  const activeError = mode === 'dynamic' ? dynamicError : error;
   const statusText =
-    compileStatus === 'compiling'
+    activeStatus === 'compiling'
       ? 'COMPILING...'
-      : compileStatus === 'error'
+      : activeStatus === 'error'
         ? 'ERROR'
-        : compileResult
-          ? `${compileResult.program.code_size}B / ${compileResult.disassembly.split('\n').length} OPS`
-          : '';
+        : mode === 'dynamic' && dynamicResult
+          ? `${dynamicResult.program.code_size}B / ${dynamicResult.program.binds.length} BINDS / ${dynamicResult.evaluations.length} EVALS`
+          : mode === 'static' && compileResult
+            ? `${compileResult.program.code_size}B / ${compileResult.disassembly.split('\n').length} OPS`
+            : '';
 
   return (
     <div data-part={PARTS.header}>
@@ -52,7 +96,7 @@ export function Header() {
           <button
             key={m}
             data-state={mode === m ? 'active' : undefined}
-            onClick={() => dispatch(setMode(m))}
+            onClick={() => handleModeSwitch(m)}
             style={{ fontSize: '9px', padding: '4px 8px' }}
           >
             {m.toUpperCase()}
@@ -66,7 +110,7 @@ export function Header() {
         onChange={(e) => handlePresetChange(e.target.value)}
       >
         <option value="">-- select preset --</option>
-        {(presetsData?.presets ?? []).map((p) => (
+        {(presets?.presets ?? []).map((p) => (
           <option key={p.name} value={p.name}>
             {p.name}
           </option>
@@ -92,7 +136,7 @@ export function Header() {
         data-part={PARTS.compileStatus}
         style={{
           fontSize: '9px',
-          color: error ? 'var(--color-red)' : 'var(--color-dim2)',
+          color: activeError ? 'var(--color-red)' : 'var(--color-dim2)',
         }}
       >
         {statusText}

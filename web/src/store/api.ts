@@ -4,12 +4,16 @@ import type {
   CompileResponse,
   PresetsResponse,
   PresetDetailResponse,
+  DynamicCompileRequest,
+  DynamicCompileResponse,
+  DynamicPresetDetailResponse,
 } from '../types/api';
 
 export const compilerApi = createApi({
   reducerPath: 'compilerApi',
   baseQuery: fetchBaseQuery({ baseUrl: '/api' }),
   endpoints: (builder) => ({
+    // Static compiler
     compile: builder.mutation<CompileResponse, CompileRequest>({
       query: (body) => ({
         url: '/compile',
@@ -24,9 +28,8 @@ export const compilerApi = createApi({
       query: (name) => `/presets/${name}`,
     }),
 
-    // GNOSIS-003: Dynamic compilation stubs
-    // These endpoints will be implemented when the backend routes exist.
-    compileDynamic: builder.mutation<unknown, { source: string; runtimes: Array<{ name: string; data: string }> }>({
+    // Dynamic compiler
+    compileDynamic: builder.mutation<DynamicCompileResponse, DynamicCompileRequest>({
       query: (body) => ({
         url: '/compile-dynamic',
         method: 'POST',
@@ -35,6 +38,9 @@ export const compilerApi = createApi({
     }),
     getDynamicPresets: builder.query<PresetsResponse, void>({
       query: () => '/presets-dynamic',
+    }),
+    getDynamicPreset: builder.query<DynamicPresetDetailResponse, string>({
+      query: (name) => `/presets-dynamic/${name}`,
     }),
   }),
 });
@@ -45,4 +51,5 @@ export const {
   useLazyGetPresetQuery,
   useCompileDynamicMutation,
   useGetDynamicPresetsQuery,
+  useLazyGetDynamicPresetQuery,
 } = compilerApi;

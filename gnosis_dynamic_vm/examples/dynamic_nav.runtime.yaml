@@ -1,0 +1,18 @@
+- name: Idle
+  data:
+    props:
+      title: GNOSIS
+    sensor:
+      value: 420
+    status:
+      time: "14:30"
+      msg: "OK"
+- name: Alert
+  data:
+    props:
+      title: ENGINE
+    sensor:
+      value: 890
+    status:
+      time: "14:31"
+      msg: "WARN: HIGH"

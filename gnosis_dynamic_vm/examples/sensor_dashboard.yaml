@@ -1,0 +1,53 @@
+type: screen
+width: 280
+height: 120
+body:
+  type: fixed
+  children:
+    - type: vbox
+      x: 8
+      y: 8
+      gap: 4
+      children:
+        - type: hbox
+          gap: 2
+          children:
+            - type: label
+              bind: props.title
+              size: 2
+        - type: sep
+          w: 260
+        - type: hbox
+          gap: 2
+          children:
+            - type: label
+              text: "TEMP:"
+            - type: label
+              bind: sensor.temp
+              field_w: 5
+            - type: label
+              text: "C"
+        - type: bar
+          bind: sensor.temp
+          w: 260
+          h: 6
+          max: 100
+          track: light
+          fill: fg
+        - type: hbox
+          gap: 2
+          children:
+            - type: label
+              text: "HUM:"
+            - type: label
+              bind: sensor.humidity
+              field_w: 4
+            - type: label
+              text: "%"
+        - type: bar
+          bind: sensor.humidity
+          w: 260
+          h: 6
+          max: 100
+          track: light
+          fill: mid

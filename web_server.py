@@ -19,10 +19,15 @@ import yaml
 from gnosis_compiler import Compiler, CompileOptions, disassemble_code
 from gnosis_compiler.util import Rect
 
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent / 'gnosis_dynamic_vm'))
+from gnosis_dynamic import Compiler as DynamicCompiler, VM  # noqa: E402
+
 app = Flask(__name__, static_folder=None)
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 EXAMPLES_DIR = PROJECT_ROOT / 'examples'
+DYNAMIC_EXAMPLES_DIR = PROJECT_ROOT / 'gnosis_dynamic_vm' / 'examples'
 WEB_DIR = PROJECT_ROOT / 'web'
 
 # ---------------------------------------------------------------------------
@@ -64,6 +69,30 @@ def _load_presets() -> dict[str, dict[str, Any]]:
     return presets
 
 PRESETS = _load_presets()
+
+
+def _load_dynamic_presets() -> dict[str, dict[str, Any]]:
+    presets: dict[str, dict[str, Any]] = {}
+    for yaml_file in sorted(DYNAMIC_EXAMPLES_DIR.glob('*.yaml')):
+        if yaml_file.stem.endswith('.runtime'):
+            continue
+        name = yaml_file.stem
+        source = yaml_file.read_text(encoding='utf-8')
+        runtime_file = yaml_file.with_suffix('').with_suffix('.runtime.yaml')
+        runtimes = []
+        if runtime_file.exists():
+            raw = yaml.safe_load(runtime_file.read_text(encoding='utf-8'))
+            if isinstance(raw, list):
+                runtimes = raw
+        presets[name] = {
+            'name': name,
+            'description': name.replace('-', ' ').replace('_', ' ').title(),
+            'source': source,
+            'runtimes': runtimes,
+        }
+    return presets
+
+DYNAMIC_PRESETS = _load_dynamic_presets()
 
 
 # ---------------------------------------------------------------------------
@@ -135,6 +164,86 @@ def api_preset(name: str):
     preset = PRESETS.get(name)
     if preset is None:
         return jsonify({'error': f'Preset not found: {name}'}), 404
+    return jsonify(preset)
+
+
+@app.route('/api/compile-dynamic', methods=['POST'])
+def api_compile_dynamic():
+    try:
+        body = request.get_json(force=True)
+    except Exception:
+        return jsonify({'success': False, 'error': 'Invalid JSON body'}), 400
+
+    source_text = body.get('source', '')
+    runtimes = body.get('runtimes', [])
+
+    if not source_text.strip():
+        return jsonify({'success': False, 'error': 'source is required'}), 400
+
+    try:
+        source_obj = yaml.safe_load(source_text)
+        compiler = DynamicCompiler()
+        compile_result = compiler.compile(source_obj)
+        program = compile_result.program
+
+        # Evaluate each runtime
+        vm = VM()
+        evaluations = []
+        for rt in runtimes:
+            rt_name = rt.get('name', 'unnamed')
+            rt_data = rt.get('data', {})
+            eval_result = vm.evaluate(program, rt_data)
+            evaluations.append({
+                'name': rt_name,
+                'runtime_data': rt_data,
+                'slots': eval_result.slots,
+                'draw_ops': eval_result.draw_ops,
+            })
+
+        # Build slot init map (name → value)
+        slot_init_named = compile_result.slot_init_names
+
+        result = {
+            'success': True,
+            'program': {
+                'node_count': program.node_count,
+                'slot_count': program.node_count * 6,
+                'binds': program.binds,
+                'strings': program.strings,
+                'slot_init': slot_init_named,
+                'code_size': len(program.code),
+                'code_base64': base64.b64encode(program.code).decode(),
+                'binary_base64': base64.b64encode(program.to_bytes()).decode(),
+            },
+            'disassembly': compile_result.disasm,
+            'ir': compile_result.ir_dump,
+            'slot_expressions': compile_result.slot_exprs,
+            'evaluations': evaluations,
+        }
+        return jsonify(result)
+
+    except Exception as exc:
+        return jsonify({
+            'success': False,
+            'error': str(exc),
+            'traceback': traceback.format_exc(),
+        }), 400
+
+
+@app.route('/api/presets-dynamic', methods=['GET'])
+def api_dynamic_presets():
+    listing = [
+        {'name': p['name'], 'description': p['description']}
+        for p in DYNAMIC_PRESETS.values()
+    ]
+    return jsonify({'presets': listing})
+
+
+@app.route('/api/presets-dynamic/<name>', methods=['GET'])
+def api_dynamic_preset(name: str):
+    preset = DYNAMIC_PRESETS.get(name)
+    if preset is None:
+        return jsonify({'error': f'Dynamic preset not found: {name}'}), 404
     return jsonify(preset)
 
 
