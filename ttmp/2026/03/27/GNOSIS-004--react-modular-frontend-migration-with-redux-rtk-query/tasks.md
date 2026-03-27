@@ -11,3 +11,5 @@
 - [x] Phase 5: Build all 7 inspector panels as React components — Disassembly, AST, Hex, Stats, Manifest, Regions, BindSim with Storybook stories
 - [x] Phase 6: Integration testing against all presets, update web_server.py to serve from dist/, cutover from vanilla to React build
 - [x] Phase 7: Add GNOSIS-003 extension points — mode switch, panel registry with mode filtering, dynamicSlice stub, RTK Query stubs for dynamic endpoints
+- [x] Add dynamic VM backend (/api/compile-dynamic), 4 dynamic presets with runtime variants, set dynamic as default mode
+- [x] Fix CSS token inheritance (:root), auto-load first preset, visual regression comparison

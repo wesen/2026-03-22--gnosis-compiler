@@ -127,5 +127,70 @@ All 7 phases executed in a single session with 7 commits:
 
 - **Canvas fidelity**: The grain texture uses random noise, so pixel-perfect comparison with the vanilla version isn't possible. Visual regression testing should compare structure, not pixels.
 - **Storybook stories use mock data**: The `MOCK_COMPILE_RESULT` is hand-crafted. For more realistic stories, consider generating fixtures from actual compilation.
-- **Dynamic mode is UI-only**: The mode switch renders and filters tabs, but there's no backend for dynamic compilation yet. The RTK Query stubs will 404 until `web_server.py` adds the routes.
 - **The `web/dist/` directory is gitignored**: Production builds must be run before the Flask server can serve the React app. Consider a Makefile target or CI step.
+
+## 2026-03-27 — CSS Fix, Visual Regression, and Dynamic VM Integration
+
+### Problem: CSS tokens not inheriting to body
+
+The theme tokens were defined on `:where([data-widget="gnosis-workbench"])` but `body` sits **above** that element in the DOM. This meant `body { background: var(--color-bg); font-family: var(--font-mono); }` resolved to nothing — the browser fell back to defaults, making fonts look wrong and the background transparent.
+
+**Fix** (`1f580a3`): Moved all token definitions from the widget selector to `:root` in `theme-terminal.css`. The `:where()` selectors in `workbench.css` still reference the tokens, but now they resolve because `:root` is an ancestor of everything.
+
+### Visual regression with Playwright
+
+Used Playwright MCP to screenshot both `/legacy` (vanilla) and `/` (React) side-by-side with the boot preset loaded. Key findings:
+
+1. **Layout**: Pixel-perfect match — grid columns, header bar, editor panel, canvas area, inspector tabs all aligned correctly.
+2. **Fonts**: Share Tech Mono renders at the same sizes. The `:root` fix resolved the inheritance issue.
+3. **Canvas**: GNOSIS//BOOT screen renders identically — circles, cross, text, bars, navigation all present.
+4. **Disassembly**: Same 15 opcodes, same formatting.
+5. **Only intentional differences**: STATIC/DYNAMIC mode switch buttons in React header (new feature).
+
+### Auto-load first preset
+
+The legacy app auto-selects the first preset on load (`sel.selectedIndex = 1; loadPreset(sel.options[1].value)`). Added `useAutoLoadPreset` hook that watches for presets to arrive via RTK Query and loads the first one. Also added `selectedPreset` to `compilerSlice` so the dropdown is controlled (shows "boot" instead of "-- select preset --").
+
+### Dynamic VM backend (`852d50f`)
+
+**New endpoints added to `web_server.py`:**
+- `POST /api/compile-dynamic`: Takes `{source, runtimes}`, compiles via `gnosis_dynamic.Compiler`, evaluates each runtime via `gnosis_dynamic.VM`. Returns program manifest, GNDY disassembly, IR dump, slot expressions, and per-runtime evaluation results (slots dict + draw_ops list).
+- `GET /api/presets-dynamic`: Lists 4 dynamic presets.
+- `GET /api/presets-dynamic/<name>`: Returns source YAML + array of runtime payloads.
+
+**4 dynamic presets created:**
+- `dynamic_hbox`: The canonical test — hbox with bound title, separator, temp display, RPM bar. 2 runtimes: short title "T" vs long title "Temperature" (demonstrates title reflow).
+- `vbox_shrink_wrap`: Vbox that shrink-wraps to dynamic title width. 2 runtimes: "Hi" vs "Hello World".
+- `sensor_dashboard`: Dual-sensor display with title, temp bar, humidity bar. 2 runtimes: normal vs high readings.
+- `dynamic_nav`: Full screen with bar/body/nav sections, all with bound fields. 2 runtimes: idle vs alert state.
+
+Each preset has a `.runtime.yaml` companion file containing runtime variant definitions.
+
+**Frontend changes:**
+- Default mode set to `dynamic` in `compilerSlice`
+- `Header` now shows mode-appropriate presets dropdown and calls the right compile endpoint
+- `useAutoCompile` is mode-aware: calls `compileDynamic` mutation in dynamic mode
+- `useAutoLoadPreset` is mode-aware: loads dynamic presets with runtimes array
+- `dynamicSlice` now tracks `compileResult`, `compileStatus`, `error` from RTK Query
+- `DisassemblyPanel` renders GNDY format: `#` comment headers, bind table, string pool, slot init, then bytecode lines
+- `ManifestPanel` shows dynamic program manifest in dynamic mode
+- Mode switch clears editor state for clean preset loading
+
+### What's working now
+
+- Dynamic mode boots by default, loads `dynamic_hbox` preset, auto-compiles, shows GNDY disassembly with full bind table, slot init, and bytecode
+- Status bar shows `70B / 3 BINDS / 2 EVALS`
+- Mode switch works — switching to STATIC loads static presets, switching to DYNAMIC loads dynamic presets
+- All 4 dynamic presets compile and evaluate successfully
+- Canvas is blank in dynamic mode (expected — GNDY canvas renderer is GNOSIS-003 scope)
+
+### What's next (GNOSIS-003 dynamic panels)
+
+The panel registry is ready for dynamic-specific panels. The backend returns all the data needed:
+- **SLOTS panel**: `evaluations[n].slots` → table of `n<id>.<field> = value`
+- **EVAL panel**: `evaluations[n].draw_ops` → list of draw commands with positions
+- **IR panel**: `ir` field → symbolic expressions before codegen
+- **COMPARE panel**: side-by-side of two evaluations
+- **Dynamic canvas renderer**: iterate `draw_ops` and render text/bars/lines using the bitmap font engine
+
+The `registerPanels.ts` file has placeholder comments marking exactly where each panel registration goes.
