@@ -587,3 +587,195 @@
 :where([data-part="canvas-preview-widget"]) .cp-formula strong {
   color: var(--color-accent);
 }
+
+/* ── Pipeline Widget ────────────────────────────────────────── */
+
+:where([data-part="pipeline-widget"]) {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+}
+
+:where([data-part="pipeline-widget"]) .pl-runtime {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  margin-bottom: 16px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+}
+
+:where([data-part="pipeline-widget"]) .pl-runtime label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+:where([data-part="pipeline-widget"]) .pl-label {
+  color: var(--color-dim);
+}
+
+:where([data-part="pipeline-widget"]) .pl-input {
+  background: var(--color-bg3);
+  color: var(--color-orange);
+  border: 1px solid var(--color-border);
+  padding: 3px 6px;
+  font-family: inherit;
+  font-size: inherit;
+  outline: none;
+}
+
+:where([data-part="pipeline-widget"]) .pl-input:focus {
+  border-color: var(--color-accent);
+}
+
+:where([data-part="pipeline-widget"]) .pl-input-text {
+  width: 100px;
+}
+
+:where([data-part="pipeline-widget"]) .pl-input-range {
+  width: 120px;
+  accent-color: var(--color-accent);
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+:where([data-part="pipeline-widget"]) .pl-val {
+  color: var(--color-fg);
+  width: 28px;
+  text-align: right;
+}
+
+/* Phase timeline */
+:where([data-part="pipeline-widget"]) .pl-timeline {
+  display: flex;
+  gap: 0;
+  margin-bottom: 16px;
+  position: relative;
+  padding-bottom: 8px;
+}
+
+:where([data-part="pipeline-widget"]) .pl-phase-btn {
+  flex: 1;
+  padding: 6px 4px;
+  font-family: inherit;
+  font-size: var(--font-size-xs);
+  letter-spacing: 2px;
+  color: var(--color-dim2);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+  z-index: 1;
+}
+
+:where([data-part="pipeline-widget"]) .pl-phase-btn[data-state="active"] {
+  color: var(--color-accent);
+  background: var(--color-bg3);
+  border-color: var(--color-accent);
+  font-weight: bold;
+}
+
+:where([data-part="pipeline-widget"]) .pl-phase-btn[data-state="done"] {
+  color: var(--color-dim);
+  background: var(--color-bg2);
+}
+
+:where([data-part="pipeline-widget"]) .pl-phase-btn:hover {
+  color: var(--color-fg);
+}
+
+:where([data-part="pipeline-widget"]) .pl-timeline-track {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--color-border);
+}
+
+:where([data-part="pipeline-widget"]) .pl-timeline-fill {
+  height: 100%;
+  background: var(--color-accent);
+  transition: width 0.3s;
+}
+
+/* Three columns */
+:where([data-part="pipeline-widget"]) .pl-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+:where([data-part="pipeline-widget"]) .pl-col {
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  padding: 8px;
+  min-height: 120px;
+}
+
+:where([data-part="pipeline-widget"]) .pl-col-header {
+  font-size: var(--font-size-xs);
+  letter-spacing: 2px;
+  color: var(--color-dim);
+  margin-bottom: 8px;
+}
+
+:where([data-part="pipeline-widget"]) .pl-instr {
+  padding: 2px 0;
+  color: var(--color-fg);
+  line-height: 1.6;
+}
+
+:where([data-part="pipeline-widget"]) .pl-empty {
+  color: var(--color-dim2);
+  font-style: italic;
+}
+
+:where([data-part="pipeline-widget"]) .pl-change {
+  display: flex;
+  gap: 6px;
+  padding: 2px 0;
+  align-items: center;
+}
+
+:where([data-part="pipeline-widget"]) .pl-change-name {
+  color: var(--color-green);
+}
+
+:where([data-part="pipeline-widget"]) .pl-change-before {
+  color: var(--color-dim);
+}
+
+:where([data-part="pipeline-widget"]) .pl-change-arrow {
+  color: var(--color-dim2);
+}
+
+:where([data-part="pipeline-widget"]) .pl-change-after {
+  color: var(--color-accent);
+}
+
+:where([data-part="pipeline-widget"]) .pl-canvas {
+  image-rendering: pixelated;
+  display: block;
+  max-width: 100%;
+  border: 1px solid var(--color-border);
+}
+
+:where([data-part="pipeline-widget"]) .pl-draw-count {
+  font-size: var(--font-size-xs);
+  color: var(--color-dim);
+  margin-top: 4px;
+}
+
+:where([data-part="pipeline-widget"]) .pl-explanation {
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-accent);
+  background: var(--color-bg);
+  color: var(--color-fg);
+  line-height: 1.7;
+}
