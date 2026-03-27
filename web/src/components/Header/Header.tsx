@@ -1,0 +1,86 @@
+import { useCallback } from 'react';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { setSourceText, setPropsText, setAutoCompile } from '../../store/slices/compilerSlice';
+import { useCompileMutation, useGetPresetsQuery, useLazyGetPresetQuery } from '../../store/api';
+import { PARTS } from './parts';
+
+export function Header() {
+  const dispatch = useAppDispatch();
+  const sourceText = useAppSelector((s) => s.compiler.sourceText);
+  const propsText = useAppSelector((s) => s.compiler.propsText);
+  const autoCompile = useAppSelector((s) => s.compiler.autoCompile);
+  const compileResult = useAppSelector((s) => s.compiler.compileResult);
+  const compileStatus = useAppSelector((s) => s.compiler.compileStatus);
+  const error = useAppSelector((s) => s.compiler.error);
+
+  const { data: presetsData } = useGetPresetsQuery();
+  const [getPreset] = useLazyGetPresetQuery();
+  const [compile] = useCompileMutation();
+
+  const handleCompile = useCallback(() => {
+    compile({ source: sourceText, props: propsText });
+  }, [compile, sourceText, propsText]);
+
+  const handlePresetChange = useCallback(
+    async (name: string) => {
+      if (!name) return;
+      const result = await getPreset(name).unwrap();
+      dispatch(setSourceText(result.source || ''));
+      dispatch(setPropsText(result.props || ''));
+    },
+    [getPreset, dispatch],
+  );
+
+  const statusText =
+    compileStatus === 'compiling'
+      ? 'COMPILING...'
+      : compileStatus === 'error'
+        ? 'ERROR'
+        : compileResult
+          ? `${compileResult.program.code_size}B / ${compileResult.disassembly.split('\n').length} OPS`
+          : '';
+
+  return (
+    <div data-part={PARTS.header}>
+      <h1>GNOSIS // COMPILER WORKBENCH</h1>
+
+      <select
+        data-part={PARTS.presetSelect}
+        onChange={(e) => handlePresetChange(e.target.value)}
+        defaultValue=""
+      >
+        <option value="">-- select preset --</option>
+        {(presetsData?.presets ?? []).map((p) => (
+          <option key={p.name} value={p.name}>
+            {p.name}
+          </option>
+        ))}
+      </select>
+
+      <button data-part={PARTS.compileButton} onClick={handleCompile}>
+        COMPILE
+      </button>
+
+      <label style={{ fontSize: '9px', color: 'var(--color-dim)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+        <input
+          type="checkbox"
+          checked={autoCompile}
+          onChange={(e) => dispatch(setAutoCompile(e.target.checked))}
+        />
+        AUTO
+      </label>
+
+      <div style={{ flex: 1 }} />
+
+      <span
+        data-part={PARTS.compileStatus}
+        style={{
+          fontSize: '9px',
+          color: error ? 'var(--color-red)' : 'var(--color-dim2)',
+        }}
+      >
+        {statusText}
+      </span>
+    </div>
+  );
+}
