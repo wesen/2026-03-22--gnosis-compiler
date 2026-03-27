@@ -1,108 +1,141 @@
 import { useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { setSourceText, setAutoCompile, setSelectedPreset } from '../../store/slices/compilerSlice';
+import { setRuntimes, setSelectedEvaluation } from '../../store/slices/dynamicSlice';
 import {
-  setSourceText, setPropsText, setAutoCompile,
-  setMode, setSelectedPreset, type CompilerMode,
-} from '../../store/slices/compilerSlice';
-import { setRuntimes } from '../../store/slices/dynamicSlice';
+  updateSnapshot,
+  resetDebugger as resetDebuggerAction,
+  setOracleMismatches,
+  clearDebugger,
+} from '../../store/slices/debuggerSlice';
 import {
-  useCompileMutation, useCompileDynamicMutation,
-  useGetPresetsQuery, useLazyGetPresetQuery,
-  useGetDynamicPresetsQuery, useLazyGetDynamicPresetQuery,
+  useCompileMutation,
+  useGetPresetsQuery,
+  useLazyGetPresetQuery,
 } from '../../store/api';
+import {
+  getDebuggerInstance,
+  getDebuggerProgram,
+} from '../Inspector/panels/DebuggerPanel';
+import { GNDYDebugger } from '../../engine/gndy';
+import type { DebugSnapshot } from '../../engine/gndy';
 import { PARTS } from './parts';
+import { PARTS as DBG_PARTS } from '../Debugger/parts';
 
 export function Header() {
   const dispatch = useAppDispatch();
   const sourceText = useAppSelector((s) => s.compiler.sourceText);
-  const propsText = useAppSelector((s) => s.compiler.propsText);
   const autoCompile = useAppSelector((s) => s.compiler.autoCompile);
-  const compileResult = useAppSelector((s) => s.compiler.compileResult);
-  const compileStatus = useAppSelector((s) => s.compiler.compileStatus);
-  const mode = useAppSelector((s) => s.compiler.mode);
   const selectedPreset = useAppSelector((s) => s.compiler.selectedPreset);
-  const error = useAppSelector((s) => s.compiler.error);
-  const dynamicResult = useAppSelector((s) => s.dynamic.compileResult);
-  const dynamicStatus = useAppSelector((s) => s.dynamic.compileStatus);
-  const dynamicError = useAppSelector((s) => s.dynamic.error);
+  const compileResult = useAppSelector((s) => s.dynamic.compileResult);
+  const compileStatus = useAppSelector((s) => s.dynamic.compileStatus);
+  const error = useAppSelector((s) => s.dynamic.error);
   const runtimes = useAppSelector((s) => s.dynamic.runtimes);
+  const selectedEvaluation = useAppSelector((s) => s.dynamic.selectedEvaluation);
+  const debuggerStatus = useAppSelector((s) => s.debugger.status);
+  const debuggerState = useAppSelector((s) => s.debugger);
 
-  const { data: staticPresets } = useGetPresetsQuery();
-  const { data: dynamicPresets } = useGetDynamicPresetsQuery();
-  const [getStaticPreset] = useLazyGetPresetQuery();
-  const [getDynamicPreset] = useLazyGetDynamicPresetQuery();
-  const [compileStatic] = useCompileMutation();
-  const [compileDynamic] = useCompileDynamicMutation();
+  const { data: presets } = useGetPresetsQuery();
+  const [getPreset] = useLazyGetPresetQuery();
+  const [compile] = useCompileMutation();
 
   const handleCompile = useCallback(() => {
-    if (mode === 'dynamic') {
-      compileDynamic({ source: sourceText, runtimes });
-    } else {
-      compileStatic({ source: sourceText, props: propsText });
+    compile({ source: sourceText, runtimes });
+  }, [compile, sourceText, runtimes]);
+
+  // ── Debugger step controls ──────────────────────────────────
+
+  const dispatchSnap = useCallback(
+    (snap: DebugSnapshot) => {
+      const dbg = getDebuggerInstance();
+      dispatch(updateSnapshot({ snapshot: snap, historyDepth: dbg?.historyDepth ?? 0 }));
+    },
+    [dispatch],
+  );
+
+  const handleStep = useCallback(() => {
+    const dbg = getDebuggerInstance();
+    if (dbg) dispatchSnap(dbg.step());
+  }, [dispatchSnap]);
+
+  const handleStepBack = useCallback(() => {
+    const dbg = getDebuggerInstance();
+    if (!dbg) return;
+    const snap = dbg.stepBack();
+    if (snap) dispatchSnap(snap);
+  }, [dispatchSnap]);
+
+  const handleRun = useCallback(() => {
+    const dbg = getDebuggerInstance();
+    if (dbg) dispatchSnap(dbg.run());
+  }, [dispatchSnap]);
+
+  const handleRunToBp = useCallback(() => {
+    const dbg = getDebuggerInstance();
+    if (dbg) dispatchSnap(dbg.runToBreakpoint());
+  }, [dispatchSnap]);
+
+  const handleReset = useCallback(() => {
+    const dbg = getDebuggerInstance();
+    if (dbg) dispatch(resetDebuggerAction(dbg.reset()));
+  }, [dispatch]);
+
+  const handleValidate = useCallback(() => {
+    const dbg = getDebuggerInstance();
+    const program = getDebuggerProgram();
+    if (!dbg || !program || !compileResult) return;
+
+    const evaluation = compileResult.evaluations[selectedEvaluation];
+    if (!evaluation) return;
+
+    const freshDbg = new GNDYDebugger(program, evaluation.runtime_data);
+    const finalSnap = freshDbg.run();
+
+    let mismatches = 0;
+    const oracleSlots = evaluation.slots;
+    for (let i = 0; i < finalSnap.slots.length; i++) {
+      const name = `n${Math.floor(i / 6)}.${['mw', 'mh', 'x', 'y', 'w', 'h'][i % 6]}`;
+      if (oracleSlots[name] !== undefined && oracleSlots[name] !== finalSnap.slots[i]) {
+        mismatches++;
+      }
     }
-  }, [mode, compileStatic, compileDynamic, sourceText, propsText, runtimes]);
+    if (finalSnap.drawOps.length !== evaluation.draw_ops.length) {
+      mismatches++;
+    }
+    dispatch(setOracleMismatches(mismatches));
+  }, [compileResult, selectedEvaluation, dispatch]);
+
+  const handleClose = useCallback(() => {
+    dispatch(clearDebugger());
+  }, [dispatch]);
+
+  const isDbgActive = debuggerStatus !== 'idle';
+  const snap = debuggerState.snapshot;
 
   const handlePresetChange = useCallback(
     async (name: string) => {
       if (!name) return;
       dispatch(setSelectedPreset(name));
-      if (mode === 'dynamic') {
-        const result = await getDynamicPreset(name).unwrap();
-        dispatch(setSourceText(result.source || ''));
-        dispatch(setPropsText(''));
-        dispatch(setRuntimes(result.runtimes || []));
-      } else {
-        const result = await getStaticPreset(name).unwrap();
-        dispatch(setSourceText(result.source || ''));
-        dispatch(setPropsText(result.props || ''));
-      }
+      const result = await getPreset(name).unwrap();
+      dispatch(setSourceText(result.source || ''));
+      dispatch(setRuntimes(result.runtimes || []));
+      dispatch(setSelectedEvaluation(0));
     },
-    [mode, getStaticPreset, getDynamicPreset, dispatch],
+    [getPreset, dispatch],
   );
 
-  const handleModeSwitch = useCallback(
-    (m: CompilerMode) => {
-      if (m === mode) return;
-      dispatch(setMode(m));
-      dispatch(setSourceText(''));
-      dispatch(setPropsText(''));
-      dispatch(setSelectedPreset(''));
-    },
-    [mode, dispatch],
-  );
-
-  const presets = mode === 'dynamic' ? dynamicPresets : staticPresets;
-
-  // Status text depends on mode
-  const activeStatus = mode === 'dynamic' ? dynamicStatus : compileStatus;
-  const activeError = mode === 'dynamic' ? dynamicError : error;
   const statusText =
-    activeStatus === 'compiling'
+    compileStatus === 'compiling'
       ? 'COMPILING...'
-      : activeStatus === 'error'
+      : compileStatus === 'error'
         ? 'ERROR'
-        : mode === 'dynamic' && dynamicResult
-          ? `${dynamicResult.program.code_size}B / ${dynamicResult.program.binds.length} BINDS / ${dynamicResult.evaluations.length} EVALS`
-          : mode === 'static' && compileResult
-            ? `${compileResult.program.code_size}B / ${compileResult.disassembly.split('\n').length} OPS`
-            : '';
+        : compileResult
+          ? `${compileResult.program.code_size}B / ${compileResult.program.binds.length} BINDS / ${compileResult.evaluations.length} RUNTIMES`
+          : '';
 
   return (
     <div data-part={PARTS.header}>
-      <h1>GNOSIS // COMPILER WORKBENCH</h1>
-
-      <div data-part={PARTS.modeSwitch} style={{ display: 'flex', gap: 0 }}>
-        {(['static', 'dynamic'] as CompilerMode[]).map((m) => (
-          <button
-            key={m}
-            data-state={mode === m ? 'active' : undefined}
-            onClick={() => handleModeSwitch(m)}
-            style={{ fontSize: '9px', padding: '4px 8px' }}
-          >
-            {m.toUpperCase()}
-          </button>
-        ))}
-      </div>
+      <h1>GNOSIS // DYNAMIC VM WORKBENCH</h1>
 
       <select
         data-part={PARTS.presetSelect}
@@ -130,13 +163,53 @@ export function Header() {
         AUTO
       </label>
 
+      {compileResult && compileResult.evaluations.length > 0 && (
+        <select
+          value={String(selectedEvaluation)}
+          onChange={(e) => dispatch(setSelectedEvaluation(Number(e.target.value)))}
+        >
+          {compileResult.evaluations.map((evaluation, index) => (
+            <option key={evaluation.name} value={index}>
+              {evaluation.name}
+            </option>
+          ))}
+        </select>
+      )}
+
       <div style={{ flex: 1 }} />
+
+      {/* Debugger step controls when active */}
+      {isDbgActive && (
+        <div data-part={DBG_PARTS.stepControls}>
+          <button onClick={handleStep} disabled={snap?.halted}>STEP</button>
+          <button onClick={handleStepBack} disabled={debuggerState.historyDepth === 0}>BACK</button>
+          <button onClick={handleRun} disabled={snap?.halted}>RUN</button>
+          <button onClick={handleRunToBp} disabled={snap?.halted}>RUN{'\u25B6'}BP</button>
+          <button onClick={handleReset}>RESET</button>
+          <button onClick={handleValidate}>VALIDATE</button>
+          <button onClick={handleClose}>CLOSE</button>
+          {debuggerState.oracleMismatches !== null && (
+            <span
+              data-role="oracle-result"
+              style={{
+                color: debuggerState.oracleMismatches === 0
+                  ? 'var(--color-green)'
+                  : 'var(--color-red)',
+              }}
+            >
+              {debuggerState.oracleMismatches === 0
+                ? 'ORACLE: PASS'
+                : `ORACLE: ${debuggerState.oracleMismatches} MISMATCHES`}
+            </span>
+          )}
+        </div>
+      )}
 
       <span
         data-part={PARTS.compileStatus}
         style={{
           fontSize: '9px',
-          color: activeError ? 'var(--color-red)' : 'var(--color-dim2)',
+          color: error ? 'var(--color-red)' : 'var(--color-dim2)',
         }}
       >
         {statusText}

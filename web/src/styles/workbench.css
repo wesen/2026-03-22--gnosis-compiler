@@ -17,6 +17,11 @@ body {
   height: 100vh;
 }
 
+/* Debugger mode: collapse right side into header + single pane */
+:where([data-widget="gnosis-workbench"][data-state="debugging"]) {
+  grid-template-rows: auto 1fr;
+}
+
 :where([data-widget="gnosis-workbench"]) [data-part="header"] {
   grid-column: 1 / -1;
   padding: var(--space-1) var(--space-3);
@@ -40,6 +45,10 @@ body {
   display: flex;
   flex-direction: column;
   background: var(--color-bg2);
+}
+
+:where([data-widget="gnosis-workbench"][data-state="debugging"]) [data-part="editor"] {
+  grid-row: 2 / 3;
 }
 
 :where([data-widget="gnosis-workbench"]) [data-part="canvas-area"] {

@@ -1,37 +1,18 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
+import { StoreDecorator } from '../../test/storeFactory';
 import { Editor } from './Editor';
-import compilerReducer from '../../store/slices/compilerSlice';
-import editorReducer from '../../store/slices/editorSlice';
-import inspectorReducer from '../../store/slices/inspectorSlice';
-import canvasReducer from '../../store/slices/canvasSlice';
-import { compilerApi } from '../../store/api';
-
-function makeStore(overrides = {}) {
-  return configureStore({
-    reducer: {
-      compiler: compilerReducer,
-      editor: editorReducer,
-      inspector: inspectorReducer,
-      canvas: canvasReducer,
-      [compilerApi.reducerPath]: compilerApi.reducer,
-    },
-    middleware: (getDefault) => getDefault().concat(compilerApi.middleware),
-    preloadedState: overrides,
-  });
-}
 
 const meta: Meta<typeof Editor> = {
-  title: 'Shell/Editor',
+  title: 'Components/Editor',
   component: Editor,
+  parameters: { layout: 'padded' },
   decorators: [
     (Story) => (
-      <div data-widget="gnosis-workbench" style={{ width: 380, height: 600 }}>
-        <Provider store={makeStore()}>
+      <StoreDecorator>
+        <div style={{ width: 380, height: 500 }}>
           <Story />
-        </Provider>
-      </div>
+        </div>
+      </StoreDecorator>
     ),
   ],
 };
@@ -39,28 +20,22 @@ const meta: Meta<typeof Editor> = {
 export default meta;
 type Story = StoryObj<typeof Editor>;
 
-export const Default: Story = {};
+export const Empty: Story = {};
 
 export const WithSource: Story = {
   decorators: [
     (Story) => (
-      <div data-widget="gnosis-workbench" style={{ width: 380, height: 600 }}>
-        <Provider store={makeStore({ compiler: { mode: 'static', sourceText: 'type: screen\nwidth: 400\nheight: 300', propsText: '', compileResult: null, compileStatus: 'idle', error: null, bindValues: {}, autoCompile: true }, editor: { activeTab: 'source' } })}>
+      <StoreDecorator overrides={{
+        compiler: {
+          sourceText: 'type: screen\nwidth: 280\nheight: 120\nbody:\n  type: fixed\n  children:\n    - type: vbox\n      x: 8\n      y: 8',
+          autoCompile: true,
+          selectedPreset: 'sensor_dashboard',
+        },
+      }}>
+        <div style={{ width: 380, height: 500 }}>
           <Story />
-        </Provider>
-      </div>
-    ),
-  ],
-};
-
-export const WithError: Story = {
-  decorators: [
-    (Story) => (
-      <div data-widget="gnosis-workbench" style={{ width: 380, height: 600 }}>
-        <Provider store={makeStore({ compiler: { mode: 'static', sourceText: 'bad yaml', propsText: '', compileResult: null, compileStatus: 'error', error: 'Invalid YAML at line 1', bindValues: {}, autoCompile: true }, editor: { activeTab: 'source' } })}>
-          <Story />
-        </Provider>
-      </div>
+        </div>
+      </StoreDecorator>
     ),
   ],
 };

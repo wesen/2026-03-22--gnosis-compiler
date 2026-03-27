@@ -1,0 +1,385 @@
+/* Multi-pane debugger layout — structure + tokens */
+
+/* ── Layout container ───────────────────────────────────────── */
+
+:where([data-widget="gnosis-workbench"]) [data-part="debugger-layout"] {
+  background: var(--color-bg);
+  border-left: 1px solid var(--color-border);
+}
+
+/* ── Splitter ───────────────────────────────────────────────── */
+
+:where([data-widget="gnosis-workbench"]) [data-part="debugger-splitter"] {
+  position: relative;
+  z-index: 10;
+  background: transparent;
+  transition: background 0.12s;
+}
+
+:where([data-widget="gnosis-workbench"]) [data-part="debugger-splitter"][data-direction="horizontal"] {
+  cursor: ns-resize;
+  height: 5px;
+  min-height: 5px;
+}
+
+:where([data-widget="gnosis-workbench"]) [data-part="debugger-splitter"][data-direction="vertical"] {
+  cursor: ew-resize;
+  width: 5px;
+  min-width: 5px;
+  height: 100%;
+}
+
+:where([data-widget="gnosis-workbench"]) [data-part="debugger-splitter"]::after {
+  content: '';
+  position: absolute;
+  border-radius: 2px;
+  background: var(--color-border);
+  transition: background 0.15s;
+}
+
+:where([data-widget="gnosis-workbench"]) [data-part="debugger-splitter"][data-direction="horizontal"]::after {
+  left: 50%;
+  top: 1px;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 3px;
+}
+
+:where([data-widget="gnosis-workbench"]) [data-part="debugger-splitter"][data-direction="vertical"]::after {
+  top: 50%;
+  left: 1px;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 40px;
+}
+
+:where([data-widget="gnosis-workbench"]) [data-part="debugger-splitter"]:hover::after {
+  background: var(--color-accent);
+}
+
+/* ── Canvas pane ────────────────────────────────────────────── */
+
+:where([data-widget="gnosis-workbench"]) [data-part="debugger-canvas"] {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+:where([data-widget="gnosis-workbench"]) [data-part="debugger-canvas"] .dbg-canvas-viewport {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: var(--canvas-bg);
+  overflow: hidden;
+  min-height: 0;
+}
+
+:where([data-widget="gnosis-workbench"]) [data-part="debugger-canvas"] canvas {
+  image-rendering: pixelated;
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+:where([data-widget="gnosis-workbench"]) [data-part="debugger-canvas-status"] {
+  display: flex;
+  gap: 8px;
+  padding: 3px 8px;
+  font-size: var(--font-size-xs);
+  color: var(--color-dim);
+  background: var(--color-bg2);
+  border-top: 1px solid var(--color-border);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+:where([data-widget="gnosis-workbench"]) .dbg-canvas-sep {
+  color: var(--color-dim2);
+}
+
+/* ── Disassembly pane ───────────────────────────────────────── */
+
+:where([data-widget="gnosis-workbench"]) [data-part="debugger-disasm"] {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  border-right: 1px solid var(--color-border);
+}
+
+:where([data-widget="gnosis-workbench"]) [data-part="debugger-disasm-list"] {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  font-size: var(--font-size-sm);
+  min-height: 0;
+}
+
+:where([data-widget="gnosis-workbench"]) .dbg-instr {
+  display: flex;
+  gap: 0;
+  padding: 1px 6px;
+  cursor: pointer;
+  line-height: 1.7;
+}
+
+:where([data-widget="gnosis-workbench"]) .dbg-instr:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+:where([data-widget="gnosis-workbench"]) .dbg-instr[data-state="current"] {
+  background: var(--color-highlight, rgba(255, 255, 0, 0.08));
+  color: var(--color-accent);
+}
+
+:where([data-widget="gnosis-workbench"]) .dbg-instr[data-state="breakpoint"] {
+  background: var(--color-red-bg);
+}
+
+:where([data-widget="gnosis-workbench"]) .dbg-bp {
+  width: 12px;
+  flex-shrink: 0;
+  color: var(--color-red);
+  text-align: center;
+}
+
+:where([data-widget="gnosis-workbench"]) .dbg-ptr {
+  width: 14px;
+  flex-shrink: 0;
+  color: var(--color-accent);
+  text-align: center;
+}
+
+:where([data-widget="gnosis-workbench"]) .dbg-pc {
+  width: 40px;
+  flex-shrink: 0;
+  color: var(--color-dim2);
+}
+
+:where([data-widget="gnosis-workbench"]) .dbg-op {
+  width: 90px;
+  flex-shrink: 0;
+  color: var(--color-accent);
+}
+
+:where([data-widget="gnosis-workbench"]) .dbg-args {
+  flex: 1;
+  color: var(--color-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+:where([data-widget="gnosis-workbench"]) [data-part="debugger-disasm-status"] {
+  display: flex;
+  gap: 16px;
+  padding: 4px 8px;
+  font-size: var(--font-size-xs);
+  color: var(--color-dim);
+  background: var(--color-bg2);
+  border-top: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+:where([data-widget="gnosis-workbench"]) [data-part="debugger-disasm-status"] strong {
+  color: var(--color-accent);
+}
+
+/* ── Slots pane ─────────────────────────────────────────────── */
+
+:where([data-widget="gnosis-workbench"]) [data-part="debugger-slots"] {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  border-bottom: 1px solid var(--color-border);
+}
+
+:where([data-widget="gnosis-workbench"]) [data-part="debugger-slots-header"] {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 8px;
+  font-size: var(--font-size-xs);
+  color: var(--color-dim);
+  background: var(--color-bg2);
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+  letter-spacing: 1px;
+}
+
+:where([data-widget="gnosis-workbench"]) .dbg-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-size-xs);
+  color: var(--color-dim);
+  cursor: pointer;
+}
+
+:where([data-widget="gnosis-workbench"]) .dbg-toggle input {
+  cursor: pointer;
+}
+
+:where([data-widget="gnosis-workbench"]) .dbg-changed-banner {
+  padding: 3px 8px;
+  background: var(--color-highlight, rgba(255, 255, 0, 0.06));
+  border-left: 2px solid var(--color-accent);
+  font-size: var(--font-size-xs);
+  color: var(--color-accent);
+  display: flex;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+:where([data-widget="gnosis-workbench"]) [data-part="debugger-slots-grid"] {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 4px 8px;
+  display: grid;
+  grid-template-columns: auto repeat(6, 1fr);
+  gap: 1px 6px;
+  font-size: var(--font-size-sm);
+  align-content: start;
+  min-height: 0;
+}
+
+:where([data-widget="gnosis-workbench"]) .dbg-slot-label {
+  color: var(--color-accent);
+  white-space: nowrap;
+}
+
+:where([data-widget="gnosis-workbench"]) .dbg-slot-val {
+  text-align: right;
+  color: var(--color-fg);
+}
+
+:where([data-widget="gnosis-workbench"]) .dbg-slot-val[data-state="zero"] {
+  color: var(--color-dim2);
+}
+
+:where([data-widget="gnosis-workbench"]) .dbg-slot-val[data-state="changed"] {
+  color: var(--color-accent);
+  font-weight: bold;
+  background: var(--color-highlight, rgba(255, 255, 0, 0.08));
+}
+
+:where([data-widget="gnosis-workbench"]) .dbg-slot-hdr {
+  font-weight: bold;
+  color: var(--color-dim) !important;
+}
+
+/* ── Stack pane ─────────────────────────────────────────────── */
+
+:where([data-widget="gnosis-workbench"]) [data-part="debugger-stack"] {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+:where([data-widget="gnosis-workbench"]) .dbg-stack-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 8px;
+  font-size: var(--font-size-xs);
+  color: var(--color-dim);
+  background: var(--color-bg2);
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+  letter-spacing: 1px;
+}
+
+:where([data-widget="gnosis-workbench"]) .dbg-stack-hint {
+  color: var(--color-dim2);
+  font-style: italic;
+  letter-spacing: 0;
+}
+
+:where([data-widget="gnosis-workbench"]) [data-part="debugger-stack-list"] {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 4px 8px;
+  font-size: var(--font-size-sm);
+  min-height: 0;
+}
+
+:where([data-widget="gnosis-workbench"]) .dbg-stack-row {
+  display: grid;
+  grid-template-columns: auto 1fr 1fr;
+  gap: 8px;
+  line-height: 1.7;
+}
+
+:where([data-widget="gnosis-workbench"]) .dbg-stack-hdr {
+  font-weight: bold;
+  color: var(--color-dim);
+}
+
+:where([data-widget="gnosis-workbench"]) .dbg-stack-row[data-state="top"] {
+  color: var(--color-accent);
+  font-weight: bold;
+}
+
+:where([data-widget="gnosis-workbench"]) .dbg-stack-idx {
+  color: var(--color-dim);
+  white-space: nowrap;
+}
+
+:where([data-widget="gnosis-workbench"]) .dbg-stack-dec {
+  text-align: right;
+}
+
+:where([data-widget="gnosis-workbench"]) .dbg-stack-hex {
+  text-align: right;
+  color: var(--color-dim);
+}
+
+/* ── Shared empty state ─────────────────────────────────────── */
+
+:where([data-widget="gnosis-workbench"]) .dbg-pane-empty {
+  padding: 8px;
+  color: var(--color-dim);
+  font-size: var(--font-size-sm);
+}
+
+/* ── Step controls in header ────────────────────────────────── */
+
+:where([data-widget="gnosis-workbench"]) [data-part="debugger-step-controls"] {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+}
+
+:where([data-widget="gnosis-workbench"]) [data-part="debugger-step-controls"] button {
+  padding: 4px 8px;
+  font-size: var(--font-size-xs);
+  letter-spacing: 1px;
+  color: var(--color-dim);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  transition: color 0.12s, border-color 0.12s, background 0.12s;
+}
+
+:where([data-widget="gnosis-workbench"]) [data-part="debugger-step-controls"] button:hover:not(:disabled) {
+  color: var(--color-fg);
+  border-color: var(--color-accent);
+  background: var(--color-bg3);
+}
+
+:where([data-widget="gnosis-workbench"]) [data-part="debugger-step-controls"] button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+:where([data-widget="gnosis-workbench"]) [data-part="debugger-step-controls"] [data-role="oracle-result"] {
+  font-size: var(--font-size-xs);
+  letter-spacing: 1px;
+  margin-left: 8px;
+}

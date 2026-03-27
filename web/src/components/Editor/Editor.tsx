@@ -1,45 +1,25 @@
-import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { setEditorTab } from '../../store/slices/editorSlice';
-import type { EditorTab } from '../../store/slices/editorSlice';
+import { useAppSelector } from '../../store/hooks';
 import { SourceEditor } from './SourceEditor';
-import { PropsEditor } from './PropsEditor';
 import { PARTS } from './parts';
 
 export function Editor() {
-  const dispatch = useAppDispatch();
-  const activeTab = useAppSelector((s) => s.editor.activeTab);
-  const error = useAppSelector((s) => s.compiler.error);
-  const compileResult = useAppSelector((s) => s.compiler.compileResult);
+  const error = useAppSelector((s) => s.dynamic.error);
+  const compileResult = useAppSelector((s) => s.dynamic.compileResult);
 
-  const tabs: { id: EditorTab; label: string }[] = [
-    { id: 'source', label: 'SOURCE' },
-    { id: 'props', label: 'PROPS' },
-  ];
-
-  const stats = compileResult?.program.stats;
-  const statsHtml = stats
-    ? `NODES:<b>${stats.final_nodes}</b> STATIC:<b style="color:var(--color-green)">${stats.static_nodes}</b> DYN:<b style="color:var(--color-orange)">${stats.dynamic_nodes}</b> CODE:<b>${stats.code_size}B</b> STRINGS:<b>${stats.string_count}</b> BINDS:<b>${stats.bind_count}</b> REGIONS:<b>${stats.region_count}</b>`
+  const program = compileResult?.program;
+  const statsHtml = program
+    ? `NODES:<b>${program.node_count}</b> SLOTS:<b>${program.slot_count}</b> CODE:<b>${program.code_size}B</b> STRINGS:<b>${program.strings.length}</b> BINDS:<b>${program.binds.length}</b> EVALS:<b>${compileResult.evaluations.length}</b>`
     : 'Ready';
 
   return (
     <div data-part={PARTS.editor}>
       <div data-part={PARTS.editorTabs}>
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            data-state={activeTab === tab.id ? 'active' : undefined}
-            onClick={() => dispatch(setEditorTab(tab.id))}
-          >
-            {tab.label}
-          </button>
-        ))}
+        <button data-state="active">SOURCE</button>
       </div>
 
       <div data-part={PARTS.sourceWrap}>
-        {activeTab === 'source' ? <SourceEditor /> : <PropsEditor />}
-        {error && (
-          <div data-part={PARTS.errorBar}>ERR: {error}</div>
-        )}
+        <SourceEditor />
+        {error && <div data-part={PARTS.errorBar}>ERR: {error}</div>}
       </div>
 
       <div

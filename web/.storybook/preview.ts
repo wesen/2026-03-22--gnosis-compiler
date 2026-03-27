@@ -1,6 +1,7 @@
 import type { Preview } from '@storybook/react';
 import '../src/components/Inspector/registerPanels';
 import '../src/styles/workbench.css';
+import '../src/styles/debugger.css';
 import '../src/styles/theme-terminal.css';
 
 const preview: Preview = {

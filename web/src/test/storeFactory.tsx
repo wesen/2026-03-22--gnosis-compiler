@@ -2,18 +2,18 @@ import React from 'react';
 import { Provider } from 'react-redux';
 import { configureStore, type Reducer } from '@reduxjs/toolkit';
 import compilerReducer from '../store/slices/compilerSlice';
-import editorReducer from '../store/slices/editorSlice';
 import inspectorReducer from '../store/slices/inspectorSlice';
-import canvasReducer from '../store/slices/canvasSlice';
+import dynamicReducer from '../store/slices/dynamicSlice';
+import debuggerReducer from '../store/slices/debuggerSlice';
 import { compilerApi } from '../store/api';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function makeStore(overrides: Record<string, any> = {}) {
   const reducers = {
     compiler: compilerReducer,
-    editor: editorReducer,
     inspector: inspectorReducer,
-    canvas: canvasReducer,
+    dynamic: dynamicReducer,
+    debugger: debuggerReducer,
     [compilerApi.reducerPath]: compilerApi.reducer,
   };
 

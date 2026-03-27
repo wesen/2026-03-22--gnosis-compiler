@@ -2,7 +2,7 @@ import { useAppSelector } from '../../../store/hooks';
 import { base64ToBytes } from '../../../engine';
 
 export function HexPanel() {
-  const bytecodeBase64 = useAppSelector((s) => s.compiler.compileResult?.bytecode_base64);
+  const bytecodeBase64 = useAppSelector((s) => s.dynamic.compileResult?.program.code_base64);
 
   if (!bytecodeBase64) {
     return <pre style={{ padding: 8, color: 'var(--color-dim)' }}>No bytecode</pre>;

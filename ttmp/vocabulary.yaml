@@ -21,6 +21,18 @@ topics:
       description: Frontend web development, React, CSS, JavaScript
     - slug: react
       description: React framework, components, hooks, state management
+    - slug: debugger
+      description: Debugger and step-debugging focused work
+    - slug: redux
+      description: Redux Toolkit and state management work
+    - slug: virtual-machines
+      description: VM architecture, interpreter design, and runtime abstractions
+    - slug: microcode
+      description: Microprogramming, control-store design, and layered machine execution
+    - slug: fpga
+      description: FPGA implementation, soft-core experiments, and hardware prototyping
+    - slug: verilog
+      description: Verilog/SystemVerilog RTL design and simulation work
 docTypes:
     - slug: design-doc
       description: Structured rationale and architecture notes

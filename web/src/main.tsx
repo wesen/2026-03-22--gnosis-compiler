@@ -5,6 +5,7 @@ import { store } from './store';
 import { App } from './App';
 import './components/Inspector/registerPanels';
 import './styles/workbench.css';
+import './styles/debugger.css';
 import './styles/theme-terminal.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

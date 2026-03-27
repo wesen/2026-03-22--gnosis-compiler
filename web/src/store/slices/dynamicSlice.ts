@@ -1,10 +1,10 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import type { DynamicCompileResponse, RuntimePayload } from '../../types/api';
+import type { CompileResponse, RuntimePayload } from '../../types/api';
 import { compilerApi } from '../api';
 
 interface DynamicState {
   runtimes: RuntimePayload[];
-  compileResult: DynamicCompileResponse | null;
+  compileResult: CompileResponse | null;
   compileStatus: 'idle' | 'compiling' | 'success' | 'error';
   error: string | null;
   selectedEvaluation: number;
@@ -36,11 +36,11 @@ const dynamicSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addMatcher(compilerApi.endpoints.compileDynamic.matchPending, (state) => {
+      .addMatcher(compilerApi.endpoints.compile.matchPending, (state) => {
         state.compileStatus = 'compiling';
         state.error = null;
       })
-      .addMatcher(compilerApi.endpoints.compileDynamic.matchFulfilled, (state, action) => {
+      .addMatcher(compilerApi.endpoints.compile.matchFulfilled, (state, action) => {
         const data = action.payload;
         if (!data.success) {
           state.compileStatus = 'error';
@@ -50,8 +50,9 @@ const dynamicSlice = createSlice({
         state.compileStatus = 'success';
         state.compileResult = data;
         state.error = null;
+        state.selectedEvaluation = 0;
       })
-      .addMatcher(compilerApi.endpoints.compileDynamic.matchRejected, (state, action) => {
+      .addMatcher(compilerApi.endpoints.compile.matchRejected, (state, action) => {
         state.compileStatus = 'error';
         state.error = action.error.message ?? 'Network error';
       });

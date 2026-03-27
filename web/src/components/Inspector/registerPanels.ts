@@ -1,25 +1,18 @@
 import { registerPanel } from './panelRegistry';
+import { EvalPanel } from './panels/EvalPanel';
 import { DisassemblyPanel } from './panels/DisassemblyPanel';
-import { ASTPanel } from './panels/ASTPanel';
+import { IRPanel } from './panels/IRPanel';
 import { HexPanel } from './panels/HexPanel';
-import { StatsPanel } from './panels/StatsPanel';
 import { ManifestPanel } from './panels/ManifestPanel';
-import { RegionsPanel } from './panels/RegionsPanel';
-import { BindSimPanel } from './panels/BindSimPanel';
+import { DebuggerPanel } from './panels/DebuggerPanel';
+import { SlotsPanel } from './panels/SlotsPanel';
+import { StackPanel } from './panels/StackPanel';
 
-// Static-mode panels (also available in dynamic for common ones)
-registerPanel({ id: 'disasm', label: 'DISASSEMBLY', modes: ['static', 'dynamic'], component: DisassemblyPanel });
-registerPanel({ id: 'ast', label: 'AST', modes: ['static'], component: ASTPanel });
-registerPanel({ id: 'hex', label: 'HEX', modes: ['static', 'dynamic'], component: HexPanel });
-registerPanel({ id: 'stats', label: 'STATS', modes: ['static'], component: StatsPanel });
-registerPanel({ id: 'manifest', label: 'MANIFEST', modes: ['static', 'dynamic'], component: ManifestPanel });
-registerPanel({ id: 'regions', label: 'REGIONS', modes: ['static'], component: RegionsPanel });
-registerPanel({ id: 'bindsim', label: 'BIND SIM', modes: ['static'], component: BindSimPanel });
-
-// GNOSIS-003 will add:
-// registerPanel({ id: 'slots', label: 'SLOTS', modes: ['dynamic'], component: SlotsPanel });
-// registerPanel({ id: 'stack', label: 'STACK', modes: ['dynamic'], component: StackPanel });
-// registerPanel({ id: 'ir', label: 'IR', modes: ['dynamic'], component: IRPanel });
-// registerPanel({ id: 'eval', label: 'EVAL', modes: ['dynamic'], component: EvalPanel });
-// registerPanel({ id: 'compare', label: 'COMPARE', modes: ['dynamic'], component: ComparePanel });
-// registerPanel({ id: 'debugger', label: 'DEBUGGER', modes: ['dynamic'], component: DebuggerPanel });
+registerPanel({ id: 'debugger', label: 'DEBUGGER', component: DebuggerPanel });
+registerPanel({ id: 'eval', label: 'EVAL', component: EvalPanel });
+registerPanel({ id: 'slots', label: 'SLOTS', component: SlotsPanel });
+registerPanel({ id: 'stack', label: 'STACK', component: StackPanel });
+registerPanel({ id: 'disasm', label: 'DISASSEMBLY', component: DisassemblyPanel });
+registerPanel({ id: 'ir', label: 'IR', component: IRPanel });
+registerPanel({ id: 'hex', label: 'HEX', component: HexPanel });
+registerPanel({ id: 'manifest', label: 'MANIFEST', component: ManifestPanel });

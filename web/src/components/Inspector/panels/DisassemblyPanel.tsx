@@ -4,10 +4,7 @@ import { setHighlightPc } from '../../../store/slices/inspectorSlice';
 
 export function DisassemblyPanel() {
   const dispatch = useAppDispatch();
-  const mode = useAppSelector((s) => s.compiler.mode);
-  const staticDisasm = useAppSelector((s) => s.compiler.compileResult?.disassembly ?? '');
-  const dynamicDisasm = useAppSelector((s) => s.dynamic.compileResult?.disassembly ?? '');
-  const disassembly = mode === 'dynamic' ? dynamicDisasm : staticDisasm;
+  const disassembly = useAppSelector((s) => s.dynamic.compileResult?.disassembly ?? '');
   const highlightPc = useAppSelector((s) => s.inspector.highlightPc);
 
   const lines = disassembly.split('\n');
@@ -26,7 +23,6 @@ export function DisassemblyPanel() {
   return (
     <div data-part="panel-disasm">
       {lines.map((line, i) => {
-        // GNBC format: "0000: OPCODE args"
         const m = line.match(/^([0-9a-f]+):\s+(\S+)\s*(.*)/i);
         if (m) {
           const offset = parseInt(m[1]!, 16);
@@ -43,7 +39,6 @@ export function DisassemblyPanel() {
             </div>
           );
         }
-        // Comment or header line (GNDY format uses # comments and section headers)
         if (line.startsWith('#') || line.startsWith('nodes:') || line.startsWith('binds:') || line.startsWith('strings:')) {
           return (
             <div key={i} style={{ padding: '0 8px', color: 'var(--color-accent)', fontWeight: line.startsWith('#') ? 'bold' : undefined }}>
@@ -51,7 +46,6 @@ export function DisassemblyPanel() {
             </div>
           );
         }
-        // Indented data lines (slot init, bind table, string pool)
         if (line.match(/^\s+/)) {
           return (
             <div key={i} style={{ padding: '0 8px', color: 'var(--color-dim)' }}>
@@ -59,11 +53,9 @@ export function DisassemblyPanel() {
             </div>
           );
         }
-        // Empty line
         if (!line.trim()) {
           return <div key={i} style={{ height: 4 }} />;
         }
-        // Fallback
         return (
           <div key={i} style={{ padding: '0 8px', color: 'var(--color-fg)' }}>
             {line}

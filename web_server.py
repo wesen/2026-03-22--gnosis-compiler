@@ -1,23 +1,14 @@
-"""GNOSIS Compiler Web UI — Python server.
-
-Serves a browser-based experimentation tool for the GNOSIS layout compiler.
-Exposes /api/compile, /api/presets, and serves the frontend from web/.
-"""
+"""GNOSIS dynamic VM workbench server."""
 from __future__ import annotations
 
 import base64
-import json
 import traceback
-from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
 from flask import Flask, jsonify, request, send_from_directory
 
 import yaml
-
-from gnosis_compiler import Compiler, CompileOptions, disassemble_code
-from gnosis_compiler.util import Rect
 
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent / 'gnosis_dynamic_vm'))
@@ -26,25 +17,8 @@ from gnosis_dynamic import Compiler as DynamicCompiler, VM  # noqa: E402
 app = Flask(__name__, static_folder=None)
 
 PROJECT_ROOT = Path(__file__).resolve().parent
-EXAMPLES_DIR = PROJECT_ROOT / 'examples'
 DYNAMIC_EXAMPLES_DIR = PROJECT_ROOT / 'gnosis_dynamic_vm' / 'examples'
 WEB_DIR = PROJECT_ROOT / 'web'
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-def _make_json_safe(obj: Any) -> Any:
-    """Recursively convert an AST dict so it's JSON-serializable."""
-    if isinstance(obj, Rect):
-        return {'x': obj.x, 'y': obj.y, 'w': obj.w, 'h': obj.h}
-    if isinstance(obj, bytes):
-        return base64.b64encode(obj).decode()
-    if isinstance(obj, dict):
-        return {k: _make_json_safe(v) for k, v in obj.items()}
-    if isinstance(obj, list):
-        return [_make_json_safe(v) for v in obj]
-    return obj
 
 
 # ---------------------------------------------------------------------------
@@ -52,26 +26,6 @@ def _make_json_safe(obj: Any) -> Any:
 # ---------------------------------------------------------------------------
 
 def _load_presets() -> dict[str, dict[str, Any]]:
-    presets: dict[str, dict[str, Any]] = {}
-    for yaml_file in sorted(EXAMPLES_DIR.glob('*.yaml')):
-        if yaml_file.stem.endswith('.props'):
-            continue
-        name = yaml_file.stem
-        source = yaml_file.read_text(encoding='utf-8')
-        props_file = yaml_file.with_suffix('').with_suffix('.props.yaml')
-        props = props_file.read_text(encoding='utf-8') if props_file.exists() else ''
-        presets[name] = {
-            'name': name,
-            'description': name.replace('-', ' ').replace('_', ' ').title(),
-            'source': source,
-            'props': props,
-        }
-    return presets
-
-PRESETS = _load_presets()
-
-
-def _load_dynamic_presets() -> dict[str, dict[str, Any]]:
     presets: dict[str, dict[str, Any]] = {}
     for yaml_file in sorted(DYNAMIC_EXAMPLES_DIR.glob('*.yaml')):
         if yaml_file.stem.endswith('.runtime'):
@@ -92,7 +46,7 @@ def _load_dynamic_presets() -> dict[str, dict[str, Any]]:
         }
     return presets
 
-DYNAMIC_PRESETS = _load_dynamic_presets()
+PRESETS = _load_presets()
 
 
 # ---------------------------------------------------------------------------
@@ -107,38 +61,50 @@ def api_compile():
         return jsonify({'success': False, 'error': 'Invalid JSON body'}), 400
 
     source_text = body.get('source', '')
-    props_text = body.get('props', '')
-    options_raw = body.get('options', {})
+    runtimes = body.get('runtimes', [])
 
     if not source_text.strip():
         return jsonify({'success': False, 'error': 'source is required'}), 400
 
     try:
-        opts = CompileOptions(
-            width=int(options_raw.get('width', 400)),
-            height=int(options_raw.get('height', 300)),
-            glyph_w=int(options_raw.get('glyph_w', 8)),
-            glyph_h=int(options_raw.get('glyph_h', 8)),
-            region_merge_threshold=int(options_raw.get('region_merge_threshold', 512)),
-        )
-
-        compiler = Compiler(opts)
-
-        # Parse YAML/JSON strings directly (avoid load_source file-path detection)
         source_obj = yaml.safe_load(source_text)
-        props = yaml.safe_load(props_text) if props_text.strip() else None
+        compiler = DynamicCompiler()
+        compile_result = compiler.compile(source_obj)
+        program = compile_result.program
 
-        program, stages = compiler.compile_with_stages(source_obj, props)
+        vm = VM()
+        evaluations = []
+        for rt in runtimes:
+            rt_name = rt.get('name', 'unnamed')
+            rt_data = rt.get('data', {})
+            eval_result = vm.evaluate(program, rt_data)
+            evaluations.append({
+                'name': rt_name,
+                'runtime_data': rt_data,
+                'slots': eval_result.slots,
+                'draw_ops': eval_result.draw_ops,
+            })
 
-        disasm = disassemble_code(program.code, program.strings, program.binds)
-
+        width = int(source_obj.get('width', source_obj.get('w', 400)))
+        height = int(source_obj.get('height', source_obj.get('h', 300)))
         result = {
             'success': True,
-            'stages': _make_json_safe(stages),
-            'program': _make_json_safe(program.to_manifest()),
-            'disassembly': disasm,
-            'bytecode_base64': base64.b64encode(program.code).decode(),
-            'binary_base64': base64.b64encode(program.binary).decode() if program.binary else None,
+            'program': {
+                'screen': {'width': width, 'height': height},
+                'node_count': program.node_count,
+                'slot_count': program.node_count * 6,
+                'binds': program.binds,
+                'strings': program.strings,
+                'slot_init': compile_result.slot_init_names,
+                'code_size': len(program.code),
+                'code_base64': base64.b64encode(program.code).decode(),
+                'binary_base64': base64.b64encode(program.to_bytes()).decode(),
+                'manifest': program.manifest,
+            },
+            'disassembly': compile_result.disasm,
+            'ir': compile_result.ir_dump,
+            'slot_expressions': compile_result.slot_exprs,
+            'evaluations': evaluations,
         }
         return jsonify(result)
 
@@ -167,101 +133,6 @@ def api_preset(name: str):
     return jsonify(preset)
 
 
-@app.route('/api/compile-dynamic', methods=['POST'])
-def api_compile_dynamic():
-    try:
-        body = request.get_json(force=True)
-    except Exception:
-        return jsonify({'success': False, 'error': 'Invalid JSON body'}), 400
-
-    source_text = body.get('source', '')
-    runtimes = body.get('runtimes', [])
-
-    if not source_text.strip():
-        return jsonify({'success': False, 'error': 'source is required'}), 400
-
-    try:
-        source_obj = yaml.safe_load(source_text)
-        compiler = DynamicCompiler()
-        compile_result = compiler.compile(source_obj)
-        program = compile_result.program
-
-        # Evaluate each runtime
-        vm = VM()
-        evaluations = []
-        for rt in runtimes:
-            rt_name = rt.get('name', 'unnamed')
-            rt_data = rt.get('data', {})
-            eval_result = vm.evaluate(program, rt_data)
-            evaluations.append({
-                'name': rt_name,
-                'runtime_data': rt_data,
-                'slots': eval_result.slots,
-                'draw_ops': eval_result.draw_ops,
-            })
-
-        # Build slot init map (name → value)
-        slot_init_named = compile_result.slot_init_names
-
-        result = {
-            'success': True,
-            'program': {
-                'node_count': program.node_count,
-                'slot_count': program.node_count * 6,
-                'binds': program.binds,
-                'strings': program.strings,
-                'slot_init': slot_init_named,
-                'code_size': len(program.code),
-                'code_base64': base64.b64encode(program.code).decode(),
-                'binary_base64': base64.b64encode(program.to_bytes()).decode(),
-            },
-            'disassembly': compile_result.disasm,
-            'ir': compile_result.ir_dump,
-            'slot_expressions': compile_result.slot_exprs,
-            'evaluations': evaluations,
-        }
-        return jsonify(result)
-
-    except Exception as exc:
-        return jsonify({
-            'success': False,
-            'error': str(exc),
-            'traceback': traceback.format_exc(),
-        }), 400
-
-
-@app.route('/api/presets-dynamic', methods=['GET'])
-def api_dynamic_presets():
-    listing = [
-        {'name': p['name'], 'description': p['description']}
-        for p in DYNAMIC_PRESETS.values()
-    ]
-    return jsonify({'presets': listing})
-
-
-@app.route('/api/presets-dynamic/<name>', methods=['GET'])
-def api_dynamic_preset(name: str):
-    preset = DYNAMIC_PRESETS.get(name)
-    if preset is None:
-        return jsonify({'error': f'Dynamic preset not found: {name}'}), 404
-    return jsonify(preset)
-
-
-@app.route('/api/options', methods=['GET'])
-def api_options():
-    from gnosis_compiler.constants import (
-        COLOR_NAMES, NODE_TYPES, WAVEFORM_NAMES,
-        Color, Opcode, Waveform,
-    )
-    return jsonify({
-        'defaults': asdict(CompileOptions()),
-        'node_types': sorted(NODE_TYPES),
-        'color_names': {int(k): v for k, v in COLOR_NAMES.items()},
-        'waveform_names': {int(k): v for k, v in WAVEFORM_NAMES.items()},
-        'opcodes': {int(op): op.name for op in Opcode},
-    })
-
-
 # ---------------------------------------------------------------------------
 # Frontend static files
 # ---------------------------------------------------------------------------
@@ -271,21 +142,13 @@ DIST_DIR = WEB_DIR / 'dist'
 
 @app.route('/')
 def index():
-    # Serve React build if available, otherwise original index.html
     if (DIST_DIR / 'app.html').is_file():
         return send_from_directory(DIST_DIR, 'app.html')
-    return send_from_directory(WEB_DIR, 'index.html')
-
-
-@app.route('/legacy')
-def legacy():
-    """Original vanilla JS frontend (preserved for comparison)."""
-    return send_from_directory(WEB_DIR, 'index.html')
+    return send_from_directory(WEB_DIR, 'app.html')
 
 
 @app.route('/<path:path>')
 def static_files(path: str):
-    # Serve from dist/ first (React build assets), then web/ (legacy)
     dist_file = DIST_DIR / path
     if dist_file.is_file():
         return send_from_directory(DIST_DIR, path)

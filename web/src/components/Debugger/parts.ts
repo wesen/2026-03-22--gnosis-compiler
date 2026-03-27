@@ -1,0 +1,15 @@
+export const PARTS = {
+  debuggerLayout: 'debugger-layout',
+  canvasPane: 'debugger-canvas',
+  canvasStatus: 'debugger-canvas-status',
+  disasmPane: 'debugger-disasm',
+  disasmList: 'debugger-disasm-list',
+  disasmStatus: 'debugger-disasm-status',
+  slotsPane: 'debugger-slots',
+  slotsHeader: 'debugger-slots-header',
+  slotsGrid: 'debugger-slots-grid',
+  stackPane: 'debugger-stack',
+  stackList: 'debugger-stack-list',
+  splitter: 'debugger-splitter',
+  stepControls: 'debugger-step-controls',
+} as const;
