@@ -68,3 +68,64 @@ Create a comprehensive implementation plan for migrating `web/index.html` (620 l
 - The Vite proxy to Flask needs testing — the Flask server currently serves static files from `web/` so the proxy must only catch `/api/*` routes.
 - The canvas rendering pipeline must be regression-tested against all presets before cutover.
 - The resize handle drag behavior has subtle UX (cursor style, user-select, body-level event listeners) that needs careful porting to React refs.
+
+## 2026-03-27 — Implementation Complete (all 7 phases)
+
+### What was built
+
+All 7 phases executed in a single session with 7 commits:
+
+**Phase 1 — Scaffold** (`c4ab17f`): Vite + React 18 + TypeScript + Redux Toolkit + Storybook 8.6. Flask proxy at `/api/*`. Production build produces ~245KB JS bundle.
+
+**Phase 2 — Engine extraction** (`c5ea6a6`): 4 pure TypeScript modules:
+- `engine/bitmapFont.ts`: 65-character glyph set (5x7), `blitChar()`, `blitText()`, palette constants
+- `engine/bytecodeExecutor.ts`: 13 opcodes, `readU16LE()`, `executeBytecode()`
+- `engine/overlays.ts`: bounds, dirty region, depth overlays with typed `ASTNode`/`Region` interfaces
+- `engine/base64.ts`: `base64ToBytes()`
+
+**Phase 3 — Redux store** (`14134be`): 4 slices + RTK Query:
+- `compilerSlice`: mode, sourceText/propsText, compileResult, error, bindValues, autoCompile. Extra reducers auto-sync with RTK Query mutation lifecycle.
+- `editorSlice`: activeTab (source/props)
+- `inspectorSlice`: activeTab, inspectorHeight, astStage, highlightPc
+- `canvasSlice`: overlay toggles, hoverInfo
+- RTK Query: compile mutation, getPresets/getPreset queries
+
+**Phase 4 — Shell components** (`ac37180`):
+- `<Header>`: presets via RTK Query, compile button, auto-compile toggle, status display
+- `<Editor>`: tab switch, `<SourceEditor>` and `<PropsEditor>` wired to Redux
+- `<Canvas>`: renders bytecode via engine modules, grain texture, overlay dispatch
+- `<ResizeHandle>`: drag behavior via document-level mouse listeners
+- `useAutoCompile` hook: 400ms debounce, fires RTK Query mutation
+- Storybook stories for Header (Default, Compiling, WithError), Editor, Canvas, App
+
+**Phase 5 — Inspector panels** (`2b0477f`):
+- 7 panels: `DisassemblyPanel` (click-to-highlight), `ASTPanel` (stage selector, recursive collapsible tree), `HexPanel`, `StatsPanel`, `ManifestPanel`, `RegionsPanel`, `BindSimPanel`
+- Inspector uses record-based panel lookup
+- `test/storeFactory.tsx` and `test/mockData.ts` for Storybook decorators
+- Stories for each panel (Default + Empty variants, Highlighted for disasm)
+
+**Phase 6 — Cutover** (`e7c3751`):
+- `web_server.py` updated: serves React build from `web/dist/` at `/`, original at `/legacy`
+- Static file resolution checks `dist/` first, then `web/`
+
+**Phase 7 — GNOSIS-003 extension points** (`35ec1a3`):
+- Mode switch (STATIC/DYNAMIC) in Header
+- `panelRegistry.ts`: `registerPanel()`, `getPanelsForMode()`, `getPanelById()`
+- `registerPanels.ts`: all 7 panels registered with mode metadata, comments mark GNOSIS-003 slots
+- `dynamicSlice.ts`: runtimeA/B, compareEnabled, debugger state stub
+- RTK Query stubs: `compileDynamic`, `getDynamicPresets`
+- TabBar and Inspector auto-filter panels by mode
+
+### What went smoothly
+
+- The Storybook peer dependency conflict was the only real snag — pinning all `@storybook/*` to exact `8.6.14` resolved it.
+- TypeScript caught zero runtime issues — `noUncheckedIndexedAccess` forced null-safe array access everywhere, which is exactly right for bytecode parsing.
+- The `as never` cast in story decorators for `preloadedState` was the pragmatic choice over fighting RTK's generic types in test code.
+- The panel registry pattern worked cleanly — registering panels is a one-liner, mode filtering is automatic.
+
+### What to watch for
+
+- **Canvas fidelity**: The grain texture uses random noise, so pixel-perfect comparison with the vanilla version isn't possible. Visual regression testing should compare structure, not pixels.
+- **Storybook stories use mock data**: The `MOCK_COMPILE_RESULT` is hand-crafted. For more realistic stories, consider generating fixtures from actual compilation.
+- **Dynamic mode is UI-only**: The mode switch renders and filters tabs, but there's no backend for dynamic compilation yet. The RTK Query stubs will 404 until `web_server.py` adds the routes.
+- **The `web/dist/` directory is gitignored**: Production builds must be run before the Flask server can serve the React app. Consider a Makefile target or CI step.
