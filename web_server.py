@@ -157,13 +157,29 @@ def api_options():
 # Frontend static files
 # ---------------------------------------------------------------------------
 
+DIST_DIR = WEB_DIR / 'dist'
+
+
 @app.route('/')
 def index():
+    # Serve React build if available, otherwise original index.html
+    if (DIST_DIR / 'app.html').is_file():
+        return send_from_directory(DIST_DIR, 'app.html')
+    return send_from_directory(WEB_DIR, 'index.html')
+
+
+@app.route('/legacy')
+def legacy():
+    """Original vanilla JS frontend (preserved for comparison)."""
     return send_from_directory(WEB_DIR, 'index.html')
 
 
 @app.route('/<path:path>')
 def static_files(path: str):
+    # Serve from dist/ first (React build assets), then web/ (legacy)
+    dist_file = DIST_DIR / path
+    if dist_file.is_file():
+        return send_from_directory(DIST_DIR, path)
     return send_from_directory(WEB_DIR, path)
 
 
