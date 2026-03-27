@@ -1,35 +1,24 @@
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { setActiveTab } from '../../store/slices/inspectorSlice';
+import { getPanelsForMode } from './panelRegistry';
 import { PARTS } from './parts';
-
-export interface TabDef {
-  id: string;
-  label: string;
-}
-
-const TABS: TabDef[] = [
-  { id: 'disasm', label: 'DISASSEMBLY' },
-  { id: 'ast', label: 'AST' },
-  { id: 'hex', label: 'HEX' },
-  { id: 'stats', label: 'STATS' },
-  { id: 'manifest', label: 'MANIFEST' },
-  { id: 'regions', label: 'REGIONS' },
-  { id: 'bindsim', label: 'BIND SIM' },
-];
 
 export function TabBar() {
   const dispatch = useAppDispatch();
   const activeTab = useAppSelector((s) => s.inspector.activeTab);
+  const mode = useAppSelector((s) => s.compiler.mode);
+
+  const panels = getPanelsForMode(mode);
 
   return (
     <div data-part={PARTS.tabBar}>
-      {TABS.map((tab) => (
+      {panels.map((panel) => (
         <button
-          key={tab.id}
-          data-state={activeTab === tab.id ? 'active' : undefined}
-          onClick={() => dispatch(setActiveTab(tab.id))}
+          key={panel.id}
+          data-state={activeTab === panel.id ? 'active' : undefined}
+          onClick={() => dispatch(setActiveTab(panel.id))}
         >
-          {tab.label}
+          {panel.label}
         </button>
       ))}
       <div style={{ flex: 1 }} />

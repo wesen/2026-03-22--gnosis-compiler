@@ -1,33 +1,26 @@
-import type { FC } from 'react';
 import { useAppSelector } from '../../store/hooks';
+import { getPanelById, getPanelsForMode } from './panelRegistry';
 import { PARTS } from './parts';
-import { DisassemblyPanel } from './panels/DisassemblyPanel';
-import { ASTPanel } from './panels/ASTPanel';
-import { HexPanel } from './panels/HexPanel';
-import { StatsPanel } from './panels/StatsPanel';
-import { ManifestPanel } from './panels/ManifestPanel';
-import { RegionsPanel } from './panels/RegionsPanel';
-import { BindSimPanel } from './panels/BindSimPanel';
-
-const PANELS: Record<string, FC> = {
-  disasm: DisassemblyPanel,
-  ast: ASTPanel,
-  hex: HexPanel,
-  stats: StatsPanel,
-  manifest: ManifestPanel,
-  regions: RegionsPanel,
-  bindsim: BindSimPanel,
-};
 
 export function Inspector() {
   const activeTab = useAppSelector((s) => s.inspector.activeTab);
   const inspectorHeight = useAppSelector((s) => s.inspector.inspectorHeight);
+  const mode = useAppSelector((s) => s.compiler.mode);
 
-  const Panel = PANELS[activeTab] ?? DisassemblyPanel;
+  // Find the panel; fall back to first available in current mode
+  const panel = getPanelById(activeTab);
+  const modePanels = getPanelsForMode(mode);
+  const effectivePanel = panel && panel.modes.includes(mode) ? panel : modePanels[0];
+
+  const Panel = effectivePanel?.component;
 
   return (
     <div data-part={PARTS.inspector} style={{ height: inspectorHeight }}>
-      <Panel />
+      {Panel ? (
+        <Panel />
+      ) : (
+        <pre style={{ padding: 8, color: 'var(--color-dim)' }}>No panel available</pre>
+      )}
     </div>
   );
 }

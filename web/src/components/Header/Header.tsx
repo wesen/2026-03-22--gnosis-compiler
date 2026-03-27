@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { setSourceText, setPropsText, setAutoCompile } from '../../store/slices/compilerSlice';
+import { setSourceText, setPropsText, setAutoCompile, setMode, type CompilerMode } from '../../store/slices/compilerSlice';
 import { useCompileMutation, useGetPresetsQuery, useLazyGetPresetQuery } from '../../store/api';
 import { PARTS } from './parts';
 
@@ -11,6 +11,7 @@ export function Header() {
   const autoCompile = useAppSelector((s) => s.compiler.autoCompile);
   const compileResult = useAppSelector((s) => s.compiler.compileResult);
   const compileStatus = useAppSelector((s) => s.compiler.compileStatus);
+  const mode = useAppSelector((s) => s.compiler.mode);
   const error = useAppSelector((s) => s.compiler.error);
 
   const { data: presetsData } = useGetPresetsQuery();
@@ -43,6 +44,19 @@ export function Header() {
   return (
     <div data-part={PARTS.header}>
       <h1>GNOSIS // COMPILER WORKBENCH</h1>
+
+      <div data-part={PARTS.modeSwitch} style={{ display: 'flex', gap: 0 }}>
+        {(['static', 'dynamic'] as CompilerMode[]).map((m) => (
+          <button
+            key={m}
+            data-state={mode === m ? 'active' : undefined}
+            onClick={() => dispatch(setMode(m))}
+            style={{ fontSize: '9px', padding: '4px 8px' }}
+          >
+            {m.toUpperCase()}
+          </button>
+        ))}
+      </div>
 
       <select
         data-part={PARTS.presetSelect}

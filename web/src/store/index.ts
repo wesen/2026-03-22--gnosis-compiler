@@ -4,6 +4,7 @@ import compilerReducer from './slices/compilerSlice';
 import editorReducer from './slices/editorSlice';
 import inspectorReducer from './slices/inspectorSlice';
 import canvasReducer from './slices/canvasSlice';
+import dynamicReducer from './slices/dynamicSlice';
 
 export const store = configureStore({
   reducer: {
@@ -11,6 +12,7 @@ export const store = configureStore({
     editor: editorReducer,
     inspector: inspectorReducer,
     canvas: canvasReducer,
+    dynamic: dynamicReducer,
     [compilerApi.reducerPath]: compilerApi.reducer,
   },
   middleware: (getDefault) => getDefault().concat(compilerApi.middleware),
