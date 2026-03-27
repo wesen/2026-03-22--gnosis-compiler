@@ -1,0 +1,250 @@
+/* Explorer article + widget styles */
+
+/* ── Article container ──────────────────────────────────────── */
+
+:where([data-part="explorer-article"]) {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 32px 24px;
+  color: var(--color-fg);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-base);
+  line-height: 1.8;
+}
+
+:where([data-part="explorer-article"]) h1 {
+  font-size: 14px;
+  letter-spacing: 4px;
+  color: var(--color-accent);
+  margin-bottom: 24px;
+  font-weight: normal;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 8px;
+}
+
+:where([data-part="explorer-article"]) h2 {
+  font-size: 12px;
+  letter-spacing: 3px;
+  color: var(--color-accent);
+  margin-top: 32px;
+  margin-bottom: 12px;
+  font-weight: normal;
+}
+
+:where([data-part="explorer-article"]) p {
+  color: var(--color-dim);
+  margin-bottom: 16px;
+}
+
+:where([data-part="explorer-article"]) strong {
+  color: var(--color-fg);
+}
+
+:where([data-part="explorer-article"]) code {
+  color: var(--color-accent);
+  background: var(--color-bg2);
+  padding: 1px 4px;
+}
+
+/* Widget wrapper in article */
+:where([data-part="explorer-article"]) [data-part^="explorer-widget"] {
+  margin: 20px 0;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg2);
+  padding: 16px;
+}
+
+/* ── Stack Calculator ───────────────────────────────────────── */
+
+:where([data-part="stack-calculator"]) {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+}
+
+:where([data-part="stack-calculator"]) .sc-grid {
+  display: grid;
+  grid-template-columns: 1fr 140px 1fr;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+:where([data-part="stack-calculator"]) .sc-col-header {
+  font-size: var(--font-size-xs);
+  letter-spacing: 2px;
+  color: var(--color-dim);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+:where([data-part="stack-calculator"]) .sc-instr {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 6px;
+  line-height: 1.6;
+  transition: background 0.15s, color 0.15s;
+}
+
+:where([data-part="stack-calculator"]) .sc-instr[data-state="current"] {
+  background: var(--color-highlight, rgba(255, 255, 0, 0.08));
+  color: var(--color-accent);
+}
+
+:where([data-part="stack-calculator"]) .sc-instr[data-state="done"] {
+  color: var(--color-dim2);
+}
+
+:where([data-part="stack-calculator"]) .sc-instr-ptr {
+  width: 14px;
+  flex-shrink: 0;
+  color: var(--color-accent);
+}
+
+:where([data-part="stack-calculator"]) .sc-instr-name {
+  color: inherit;
+  min-width: 80px;
+}
+
+:where([data-part="stack-calculator"]) .sc-instr[data-state="current"] .sc-instr-name {
+  font-weight: bold;
+}
+
+:where([data-part="stack-calculator"]) .sc-instr-input {
+  width: 56px;
+  background: var(--color-bg3);
+  color: var(--color-orange);
+  border: 1px solid var(--color-border);
+  padding: 2px 6px;
+  font-family: inherit;
+  font-size: inherit;
+  text-align: right;
+  outline: none;
+}
+
+:where([data-part="stack-calculator"]) .sc-instr-input:focus {
+  border-color: var(--color-accent);
+}
+
+:where([data-part="stack-calculator"]) .sc-instr-slot {
+  color: var(--color-green);
+}
+
+/* Stack display */
+:where([data-part="stack-calculator"]) .sc-stack {
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  min-height: 80px;
+  padding: 4px;
+}
+
+:where([data-part="stack-calculator"]) .sc-stack-empty {
+  color: var(--color-dim2);
+  padding: 8px;
+  text-align: center;
+}
+
+:where([data-part="stack-calculator"]) .sc-stack-entry {
+  display: flex;
+  gap: 4px;
+  padding: 2px 4px;
+  transition: background 0.15s;
+}
+
+:where([data-part="stack-calculator"]) .sc-stack-entry[data-state="top"] {
+  background: var(--color-highlight, rgba(255, 255, 0, 0.06));
+}
+
+:where([data-part="stack-calculator"]) .sc-stack-ptr {
+  width: 14px;
+  color: var(--color-accent);
+}
+
+:where([data-part="stack-calculator"]) .sc-stack-idx {
+  color: var(--color-dim);
+  width: 28px;
+}
+
+:where([data-part="stack-calculator"]) .sc-stack-val {
+  font-weight: bold;
+  text-align: right;
+  flex: 1;
+}
+
+:where([data-part="stack-calculator"]) .sc-stack-entry[data-state="top"] .sc-stack-val {
+  color: var(--color-accent);
+}
+
+/* Explanation */
+:where([data-part="stack-calculator"]) .sc-explanation {
+  min-height: 60px;
+}
+
+:where([data-part="stack-calculator"]) .sc-explanation-text {
+  color: var(--color-fg);
+  padding: 4px 0;
+  border-left: 2px solid var(--color-accent);
+  padding-left: 8px;
+}
+
+:where([data-part="stack-calculator"]) .sc-explanation-hint {
+  color: var(--color-dim2);
+  font-style: italic;
+}
+
+/* Controls */
+:where([data-part="stack-calculator"]) .sc-controls {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+:where([data-part="stack-calculator"]) .sc-controls button {
+  padding: 4px 10px;
+  font-family: inherit;
+  font-size: var(--font-size-xs);
+  letter-spacing: 1px;
+  color: var(--color-dim);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  transition: color 0.12s, border-color 0.12s, background 0.12s;
+}
+
+:where([data-part="stack-calculator"]) .sc-controls button:hover:not(:disabled) {
+  color: var(--color-fg);
+  border-color: var(--color-accent);
+  background: var(--color-bg3);
+}
+
+:where([data-part="stack-calculator"]) .sc-controls button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+/* Result */
+:where([data-part="stack-calculator"]) .sc-result {
+  padding: 8px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+}
+
+:where([data-part="stack-calculator"]) .sc-result-entry {
+  margin-right: 16px;
+}
+
+:where([data-part="stack-calculator"]) .sc-result-slot {
+  color: var(--color-green);
+}
+
+:where([data-part="stack-calculator"]) .sc-result-entry strong {
+  color: var(--color-accent);
+}
+
+:where([data-part="stack-calculator"]) .sc-result-preview {
+  color: var(--color-dim2);
+}
+
+:where([data-part="stack-calculator"]) .sc-result-preview span {
+  color: var(--color-dim);
+  margin-left: 4px;
+}
