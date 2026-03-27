@@ -4,7 +4,6 @@ import { PARTS } from './parts';
 
 export function Inspector() {
   const activeTab = useAppSelector((s) => s.inspector.activeTab);
-  const inspectorHeight = useAppSelector((s) => s.inspector.inspectorHeight);
   const mode = useAppSelector((s) => s.compiler.mode);
 
   // Find the panel; fall back to first available in current mode
@@ -15,7 +14,7 @@ export function Inspector() {
   const Panel = effectivePanel?.component;
 
   return (
-    <div data-part={PARTS.inspector} style={{ height: inspectorHeight }}>
+    <div data-part={PARTS.inspector}>
       {Panel ? (
         <Panel />
       ) : (
