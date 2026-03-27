@@ -248,3 +248,190 @@
   color: var(--color-dim);
   margin-left: 4px;
 }
+
+/* ── Slot Grid Widget ───────────────────────────────────────── */
+
+:where([data-part="slot-grid-widget"]) {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+}
+
+:where([data-part="slot-grid-widget"]) .sg-runtime {
+  margin-bottom: 16px;
+  padding: 10px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+}
+
+:where([data-part="slot-grid-widget"]) .sg-runtime-header {
+  font-size: var(--font-size-xs);
+  letter-spacing: 2px;
+  color: var(--color-dim);
+  margin-bottom: 8px;
+}
+
+:where([data-part="slot-grid-widget"]) .sg-runtime-fields {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+:where([data-part="slot-grid-widget"]) .sg-field-label {
+  color: var(--color-dim);
+  margin-right: 4px;
+}
+
+:where([data-part="slot-grid-widget"]) .sg-field-input {
+  background: var(--color-bg3);
+  color: var(--color-orange);
+  border: 1px solid var(--color-border);
+  padding: 3px 6px;
+  font-family: inherit;
+  font-size: inherit;
+  outline: none;
+}
+
+:where([data-part="slot-grid-widget"]) .sg-field-input:focus {
+  border-color: var(--color-accent);
+}
+
+:where([data-part="slot-grid-widget"]) .sg-field-text {
+  width: 120px;
+}
+
+:where([data-part="slot-grid-widget"]) .sg-field-num {
+  width: 56px;
+  text-align: right;
+}
+
+:where([data-part="slot-grid-widget"]) .sg-main {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+:where([data-part="slot-grid-widget"]) .sg-grid-container {
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  padding: 10px;
+}
+
+:where([data-part="slot-grid-widget"]) .sg-grid-header {
+  font-size: var(--font-size-xs);
+  letter-spacing: 2px;
+  color: var(--color-dim);
+  margin-bottom: 10px;
+}
+
+:where([data-part="slot-grid-widget"]) .sg-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 2px;
+  text-align: center;
+}
+
+:where([data-part="slot-grid-widget"]) .sg-cell {
+  padding: 4px 6px;
+}
+
+:where([data-part="slot-grid-widget"]) .sg-cell-hdr {
+  color: var(--color-dim);
+  font-weight: bold;
+  border-bottom: 1px solid var(--color-border);
+}
+
+:where([data-part="slot-grid-widget"]) .sg-cell-val {
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--color-fg);
+  padding: 8px 6px;
+  transition: background 0.2s, color 0.2s;
+}
+
+:where([data-part="slot-grid-widget"]) .sg-cell-val[data-state="changed"] {
+  background: var(--color-highlight, rgba(255, 255, 0, 0.12));
+  color: var(--color-accent);
+}
+
+:where([data-part="slot-grid-widget"]) .sg-cell-val[data-state="zero"] {
+  color: var(--color-dim2);
+}
+
+:where([data-part="slot-grid-widget"]) .sg-cell-desc {
+  font-size: 8px;
+  color: var(--color-dim2);
+  border-top: 1px solid var(--color-border);
+  padding-top: 4px;
+}
+
+:where([data-part="slot-grid-widget"]) .sg-write-indicator {
+  color: var(--color-accent);
+  font-size: var(--font-size-xs);
+  margin-top: 6px;
+  text-align: center;
+}
+
+:where([data-part="slot-grid-widget"]) .sg-explain {
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+:where([data-part="slot-grid-widget"]) .sg-explain-step {
+  font-size: var(--font-size-xs);
+  letter-spacing: 2px;
+  color: var(--color-dim);
+}
+
+:where([data-part="slot-grid-widget"]) .sg-explain-text {
+  color: var(--color-fg);
+  line-height: 1.7;
+  border-left: 2px solid var(--color-accent);
+  padding-left: 8px;
+}
+
+:where([data-part="slot-grid-widget"]) .sg-controls {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+:where([data-part="slot-grid-widget"]) .sg-controls button {
+  padding: 4px 10px;
+  font-family: inherit;
+  font-size: var(--font-size-xs);
+  letter-spacing: 1px;
+  color: var(--color-dim);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  transition: color 0.12s, border-color 0.12s, background 0.12s;
+}
+
+:where([data-part="slot-grid-widget"]) .sg-controls button:hover:not(:disabled) {
+  color: var(--color-fg);
+  border-color: var(--color-accent);
+  background: var(--color-bg3);
+}
+
+:where([data-part="slot-grid-widget"]) .sg-controls button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+:where([data-part="slot-grid-widget"]) .sg-formula {
+  padding: 8px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  color: var(--color-dim);
+  font-size: var(--font-size-xs);
+}
+
+:where([data-part="slot-grid-widget"]) .sg-formula strong {
+  color: var(--color-accent);
+}
