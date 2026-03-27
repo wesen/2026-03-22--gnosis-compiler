@@ -779,3 +779,143 @@
   color: var(--color-fg);
   line-height: 1.7;
 }
+
+/* ── Hex Viewer Widget ──────────────────────────────────────── */
+
+:where([data-part="hex-viewer-widget"]) {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+}
+
+:where([data-part="hex-viewer-widget"]) .hv-hex-container {
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  padding: 8px;
+  margin-bottom: 8px;
+  overflow-x: auto;
+}
+
+:where([data-part="hex-viewer-widget"]) .hv-row {
+  display: flex;
+  gap: 0;
+  line-height: 1.8;
+}
+
+:where([data-part="hex-viewer-widget"]) .hv-offset {
+  width: 40px;
+  color: var(--color-dim2);
+  flex-shrink: 0;
+}
+
+:where([data-part="hex-viewer-widget"]) .hv-bytes {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+}
+
+:where([data-part="hex-viewer-widget"]) .hv-byte {
+  color: var(--color-dim);
+  cursor: pointer;
+  padding: 0 1px;
+  transition: color 0.1s, background 0.1s;
+  border-radius: 1px;
+}
+
+:where([data-part="hex-viewer-widget"]) .hv-byte:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+:where([data-part="hex-viewer-widget"]) .hv-byte[data-state="active"] {
+  font-weight: bold;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+:where([data-part="hex-viewer-widget"]) .hv-ascii {
+  width: 140px;
+  color: var(--color-dim2);
+  margin-left: 12px;
+  letter-spacing: 2px;
+  flex-shrink: 0;
+}
+
+:where([data-part="hex-viewer-widget"]) .hv-info {
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-accent);
+  background: var(--color-bg);
+  margin-bottom: 8px;
+  min-height: 36px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+:where([data-part="hex-viewer-widget"]) .hv-info-label {
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+:where([data-part="hex-viewer-widget"]) .hv-info-range {
+  color: var(--color-dim);
+  font-size: var(--font-size-xs);
+}
+
+:where([data-part="hex-viewer-widget"]) .hv-info-desc {
+  color: var(--color-fg);
+}
+
+:where([data-part="hex-viewer-widget"]) .hv-info-hint {
+  color: var(--color-dim2);
+  font-style: italic;
+}
+
+:where([data-part="hex-viewer-widget"]) .hv-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+:where([data-part="hex-viewer-widget"]) .hv-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  font-family: inherit;
+  font-size: var(--font-size-xs);
+  color: var(--color-dim);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+
+:where([data-part="hex-viewer-widget"]) .hv-legend-item:hover {
+  color: var(--color-fg);
+  border-color: var(--color-accent);
+}
+
+:where([data-part="hex-viewer-widget"]) .hv-legend-item[data-state="active"] {
+  color: var(--color-fg);
+  background: var(--color-bg3);
+  border-color: var(--color-accent);
+}
+
+:where([data-part="hex-viewer-widget"]) .hv-legend-swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 1px;
+}
+
+:where([data-part="hex-viewer-widget"]) .hv-stats {
+  padding: 6px 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-dim);
+  font-size: var(--font-size-xs);
+}
+
+:where([data-part="hex-viewer-widget"]) .hv-stats strong {
+  color: var(--color-accent);
+}
