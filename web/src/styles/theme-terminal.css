@@ -1,0 +1,36 @@
+/* Terminal theme — dark monochrome (default) */
+:where([data-widget="gnosis-workbench"]) {
+  /* Color tokens */
+  --color-bg: #0c0b0a;
+  --color-bg2: #161513;
+  --color-bg3: #1a1916;
+  --color-border: #2e2c28;
+  --color-fg: #b0aa9e;
+  --color-dim: #5a5850;
+  --color-dim2: #3a3830;
+  --color-accent: #8a8670;
+  --color-green: #6a8a50;
+  --color-red: #d04040;
+  --color-red-bg: #2a1010;
+  --color-orange: #c0a080;
+
+  /* Typography tokens */
+  --font-mono: 'Share Tech Mono', 'Courier New', monospace;
+  --font-size-xs: 9px;
+  --font-size-sm: 10px;
+  --font-size-base: 11px;
+  --font-size-md: 12px;
+
+  /* Spacing tokens */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+
+  /* Layout tokens */
+  --editor-width: 380px;
+  --inspector-height: 260px;
+
+  /* E-ink canvas tokens */
+  --canvas-bg: #d8d4cc;
+}

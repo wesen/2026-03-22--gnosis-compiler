@@ -5,6 +5,22 @@ topics:
       description: Backend services
     - slug: websocket
       description: WebSocket lifecycle & events
+    - slug: compiler
+      description: Compiler architecture, passes, bytecode, and code generation
+    - slug: dynamic-vm
+      description: Dynamic residual layout VM, slot evaluation, and GNDY tooling
+    - slug: webui
+      description: Browser-based tooling, inspection surfaces, and UI workflows
+    - slug: ux
+      description: User experience, interaction design, and handoff materials for builders
+    - slug: go
+      description: Go-related implementation or historical design context
+    - slug: step-debugging
+      description: Instruction stepping, breakpoints, stack inspection, and debugger UI behavior
+    - slug: frontend
+      description: Frontend web development, React, CSS, JavaScript
+    - slug: react
+      description: React framework, components, hooks, state management
 docTypes:
     - slug: design-doc
       description: Structured rationale and architecture notes
